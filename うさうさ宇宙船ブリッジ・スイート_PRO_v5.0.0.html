@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>うさうさ宇宙船ブリッジ・スイート PRO｜AI研修ナビゲーター</title>
+<style>
+  :root{
+    --space:#05060d;--space2:#0a0e1a;--panel:#121829;--panel2:#0e1322;
+    --amber:#f0a93b;--amber-soft:#f8cf83;--teal:#54d2c4;--rose:#e87a96;--lav:#bda6e8;--gold:#f5d77a;
+    --ivory:#f4eede;--muted:#9aa0b8;--faint:#646a86;
+    --line:rgba(189,166,232,0.18);--line-amber:rgba(240,169,59,0.34);--ok:#6fe0a8;--err:#ff7b8c;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,"Roboto Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    --rail:14px;--glow:0 0 22px rgba(240,169,59,.28);
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ivory);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+    background:radial-gradient(1100px 760px at 86% -8%,rgba(84,210,196,.13),transparent 60%),radial-gradient(1200px 800px at 4% 0%,rgba(240,169,59,.13),transparent 58%),radial-gradient(800px 600px at 50% 116%,rgba(232,122,150,.10),transparent 60%),linear-gradient(180deg,var(--space),var(--space2));min-height:100vh}
+  body::after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.45) 100%)}
+  a{color:var(--teal)} ::selection{background:rgba(240,169,59,.35)} .mono{font-family:var(--mono)}
+
+  .starfield{position:fixed;inset:-10%;z-index:0;pointer-events:none}
+  .stars{position:absolute;inset:0;background-repeat:repeat}
+  .s1{background-image:radial-gradient(1px 1px at 24px 36px,rgba(255,255,255,.9),transparent),radial-gradient(1px 1px at 120px 90px,rgba(255,255,255,.55),transparent),radial-gradient(1.4px 1.4px at 180px 40px,rgba(246,199,121,.7),transparent),radial-gradient(1px 1px at 60px 150px,rgba(255,255,255,.5),transparent);background-size:230px 230px;animation:drift1 120s linear infinite}
+  .s2{background-image:radial-gradient(1px 1px at 80px 60px,rgba(189,166,232,.7),transparent),radial-gradient(1.6px 1.6px at 200px 160px,rgba(84,210,196,.6),transparent),radial-gradient(1px 1px at 150px 210px,rgba(255,255,255,.5),transparent);background-size:320px 320px;animation:drift2 90s linear infinite,tw 6s ease-in-out infinite}
+  .s3{background-image:radial-gradient(2px 2px at 40px 120px,rgba(245,215,122,.8),transparent),radial-gradient(2.2px 2.2px at 260px 60px,rgba(232,122,150,.6),transparent);background-size:420px 420px;animation:drift3 60s linear infinite}
+  @keyframes drift1{to{transform:translateY(230px)}} @keyframes drift2{to{transform:translate(-160px,320px)}} @keyframes drift3{to{transform:translate(140px,420px)}} @keyframes tw{0%,100%{opacity:.75}50%{opacity:1}}
+
+  #boot{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#0b1020,#05060d 70%);transition:opacity .7s,visibility .7s}
+  #boot.gone{opacity:0;visibility:hidden}
+  .boot-core{text-align:center;max-width:440px;padding:0 20px}
+  .boot-ring{width:96px;height:96px;margin:0 auto 22px;border-radius:50%;display:grid;place-items:center;font-size:46px;background:radial-gradient(circle at 32% 26%,rgba(240,169,59,.5),rgba(232,122,150,.2));border:2px solid var(--amber);box-shadow:0 0 40px rgba(240,169,59,.5),inset 0 0 26px rgba(232,122,150,.25);animation:pulse 1.8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 40px rgba(240,169,59,.5),inset 0 0 26px rgba(232,122,150,.25)}50%{box-shadow:0 0 64px rgba(240,169,59,.8),inset 0 0 30px rgba(84,210,196,.3)}}
+  .boot-core h2{font-size:18px;letter-spacing:.06em;margin:0 0 6px} .boot-log{font-family:var(--mono);font-size:11.5px;color:var(--teal);letter-spacing:.08em;min-height:18px;margin-bottom:16px}
+  .boot-bar{height:6px;border-radius:4px;background:rgba(189,166,232,.16);overflow:hidden} .boot-bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--rose),var(--amber),var(--teal));box-shadow:0 0 14px rgba(240,169,59,.6);transition:width .1s linear}
+  .boot-skip{margin-top:18px;font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.1em;cursor:pointer;background:none;border:0} .boot-skip:hover{color:var(--muted)}
+
+  header.topbar{position:relative;z-index:6;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:13px 22px;border-bottom:2px solid var(--line-amber);background:linear-gradient(180deg,rgba(7,9,16,.95),rgba(7,9,16,.6));backdrop-filter:blur(9px)}
+  .brand{display:flex;align-items:center;gap:14px;min-width:0}
+  .badge{width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:25px;background:radial-gradient(circle at 32% 26%,rgba(240,169,59,.55),rgba(232,122,150,.25));border:2px solid var(--amber);box-shadow:0 0 22px rgba(240,169,59,.4),inset 0 0 16px rgba(232,122,150,.2);animation:bob 4.5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-3deg)}}
+  .brand h1{font-size:16px;margin:0;letter-spacing:.04em;background:linear-gradient(90deg,var(--amber-soft),var(--gold),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand .sub{font-family:var(--mono);font-size:10.5px;color:var(--teal);letter-spacing:.14em}
+  .verchip{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--space);background:var(--gold);padding:2px 8px;border-radius:8px;margin-left:8px;font-weight:700}
+  .topbar .spacer{flex:1} .toolbtns{display:flex;gap:8px;flex-wrap:wrap}
+  button.hud{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.05em;color:var(--space);cursor:pointer;border:0;background:var(--amber);padding:10px 14px;border-radius:18px 6px 18px 6px;transition:.16s;white-space:nowrap;position:relative;overflow:hidden}
+  button.hud::after{content:"";position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-18deg);transition:.5s}
+  button.hud:hover::after{left:130%} button.hud:hover{box-shadow:var(--glow);transform:translateY(-1px)}
+  button.hud.teal{background:var(--teal)} button.hud.rose{background:var(--rose)} button.hud.lav{background:var(--lav)}
+  button.hud.ghost{background:transparent;color:var(--ivory);border:1px solid var(--line);border-radius:18px 6px 18px 6px} button.hud.ghost:hover{background:rgba(189,166,232,.12)}
+  button.hud .dotbadge{background:var(--err);color:#3a0c14;font-size:9px;font-weight:800;border-radius:8px;padding:0 5px;margin-left:5px}
+  button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .sysline{width:100%;font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.08em;display:flex;align-items:center;gap:8px}
+  .sysline b{color:var(--ok)} .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2.6s infinite} @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}} #ticker{color:var(--teal)}
+
+  .shell{position:relative;z-index:3;display:grid;grid-template-columns:290px 1fr;min-height:calc(100vh - 86px)}
+  nav.deck{padding:18px 14px 18px 0;position:relative}
+  .deck-elbow{height:38px;border-radius:0 0 0 28px;background:var(--amber);display:flex;align-items:flex-start;box-shadow:var(--glow)} .deck-elbow .cap{margin-left:auto;margin-right:14px;margin-top:9px;color:var(--space);font-weight:800;letter-spacing:.16em;font-size:11px}
+  .deck-rail{border-left:var(--rail) solid var(--amber);padding:14px 12px 14px 14px;margin-top:-2px}
+  .deck-title{font-weight:800;letter-spacing:.16em;text-transform:uppercase;font-size:10.5px;color:var(--faint);margin:0 0 12px 2px}
+  .modules{display:flex;flex-direction:column;gap:7px}
+  .mod{display:flex;gap:11px;align-items:center;padding:9px 12px;border-radius:6px 16px 16px 6px;cursor:pointer;border:0;width:100%;text-align:left;color:var(--space);font-family:inherit;transition:.16s;background:var(--lav);position:relative;overflow:hidden}
+  .mod:nth-child(2){background:var(--teal)} .mod:nth-child(3){background:var(--amber-soft)} .mod:nth-child(4){background:var(--rose)} .mod:nth-child(5){background:var(--lav)} .mod:nth-child(6){background:var(--teal)}
+  .mod:hover{filter:brightness(1.09);transform:translateX(3px)} .mod.active{outline:2px solid var(--ivory);outline-offset:1px;box-shadow:0 0 20px rgba(244,238,222,.3)}
+  .mod .lamp{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;font-family:var(--mono);background:rgba(5,6,13,.8);color:var(--ivory)} .mod.done .lamp{background:var(--ok);color:var(--space);box-shadow:0 0 10px rgba(111,224,168,.7)}
+  .mod .mtxt{min-width:0} .mod .mcode{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;opacity:.8} .mod .mname{font-size:13px;font-weight:800;line-height:1.25} .mod .mprog{font-family:var(--mono);font-size:9.5px;opacity:.75;margin-top:1px}
+  .deck-foot{margin-top:18px;background:var(--panel);border-radius:6px 16px 16px 6px;padding:12px 14px;border:1px solid var(--line)} .deck-foot .lcars-label{color:var(--amber);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:10.5px;margin-bottom:7px;display:block}
+  .meter{height:9px;border-radius:5px;background:rgba(189,166,232,.16);overflow:hidden;position:relative} .meter>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--rose),var(--amber),var(--teal));transition:width .5s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 12px rgba(240,169,59,.6);position:relative}
+  .meter>span::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);background-size:60px 100%;animation:sh 1.8s linear infinite} @keyframes sh{from{background-position:-60px 0}to{background-position:200px 0}}
+  .deck-foot .pct{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
+  .deck-mini{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+  .deck-mini button{flex:1;min-width:84px;font-size:10.5px;font-weight:700;color:var(--ivory);background:rgba(84,210,196,.08);border:1px solid var(--line);border-radius:8px;padding:7px 6px;cursor:pointer;transition:.15s} .deck-mini button:hover{background:rgba(84,210,196,.18)}
+
+  main.stage{padding:22px 26px 70px;min-width:0}
+  .panel{position:relative;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:18px;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+  .panel.stagein{animation:stagein .4s ease both} @keyframes stagein{from{opacity:0;transform:translateY(12px) scale(.995)}to{opacity:1;transform:none}}
+  .phead{display:flex;align-items:stretch;gap:0;position:relative}
+  .phead .blk{width:62px;flex:none;border-radius:0 0 22px 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;position:relative} .phead .blk::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 18px rgba(255,255,255,.25)} .phead .blk b{color:var(--space);font-family:var(--mono);font-size:10px;letter-spacing:.06em}
+  .phead .ht{padding:13px 18px 8px 8px;flex:1;min-width:0} .phead .ht .ec{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--teal)} .phead .ht h2{margin:2px 0 0;font-size:19px;letter-spacing:.01em}
+  .phead .lamps{display:flex;gap:5px;padding:16px 16px 0 0} .phead .lamps i{width:9px;height:9px;border-radius:50%;display:block;animation:lp 3s ease-in-out infinite} .phead .lamps i:nth-child(2){animation-delay:.6s} .phead .lamps i:nth-child(3){animation-delay:1.2s} @keyframes lp{0%,100%{opacity:1}50%{opacity:.4}}
+  .blk-amber{background:var(--amber)} .blk-teal{background:var(--teal)} .blk-rose{background:var(--rose)} .blk-lav{background:var(--lav)}
+  .l-amber{background:var(--amber)} .l-teal{background:var(--teal)} .l-rose{background:var(--rose)} .l-lav{background:var(--lav)}
+  .pbody{padding:8px 20px 20px}
+  .phase-mission{color:var(--muted);font-size:13px;max-width:800px;margin-top:8px} .phase-mission b{color:var(--amber-soft);font-weight:700}
+
+  .field{margin-top:18px} .field>label.flabel{display:block;font-size:13px;font-weight:700;margin-bottom:5px} .field>label.flabel .tag{font-family:var(--mono);font-size:9.5px;color:var(--faint);letter-spacing:.1em;margin-left:8px} .field .hint{font-size:11.5px;color:var(--faint);margin:-1px 0 8px}
+  input[type=text],textarea{width:100%;font-family:var(--sans);font-size:13.5px;color:var(--ivory);background:rgba(5,6,13,.62);border:1px solid var(--line);border-radius:7px;padding:10px 12px;resize:vertical;transition:.15s} input[type=text]:focus,textarea:focus{border-color:var(--amber);background:rgba(5,6,13,.88);box-shadow:0 0 0 3px rgba(240,169,59,.1)} textarea{min-height:60px;line-height:1.55} ::placeholder{color:var(--faint)}
+  .listrows{display:flex;flex-direction:column;gap:8px} .listrow{display:flex;gap:8px;align-items:flex-start} .listrow .idx{font-family:var(--mono);font-size:11px;color:var(--faint);padding-top:11px;flex:none;width:22px;text-align:right} .listrow input{flex:1}
+  .xbtn{flex:none;width:34px;height:38px;border-radius:7px;border:1px solid var(--line);background:rgba(232,122,150,.08);color:var(--rose);cursor:pointer;font-size:15px;transition:.15s} .xbtn:hover{background:rgba(232,122,150,.22)}
+  .addbtn{margin-top:9px;font-weight:700;font-size:11.5px;letter-spacing:.04em;color:var(--space);background:var(--teal);border:0;border-radius:14px 5px 14px 5px;padding:8px 14px;cursor:pointer;transition:.15s} .addbtn:hover{filter:brightness(1.08);box-shadow:0 0 14px rgba(84,210,196,.4)}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px} table.grid{border-collapse:collapse;width:100%;min-width:580px;font-size:13px}
+  table.grid th{font-weight:800;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--space);text-align:left;background:var(--amber-soft);padding:9px 10px;white-space:nowrap} table.grid th.act{width:40px}
+  table.grid td{padding:5px 7px;border-bottom:1px solid rgba(189,166,232,.1);vertical-align:top} table.grid tr:last-child td{border-bottom:0}
+  table.grid input,table.grid textarea{border:1px solid transparent;background:transparent;padding:7px 8px;border-radius:5px} table.grid input:focus,table.grid textarea:focus{background:rgba(5,6,13,.78);border-color:var(--amber)} table.grid td .xbtn{width:30px;height:32px;font-size:14px}
+
+  .subtabs{display:flex;gap:8px;margin:4px 0 12px;flex-wrap:wrap}
+  .subtab{font-weight:800;font-size:13px;cursor:pointer;border:1px solid var(--line);background:rgba(189,166,232,.06);color:var(--muted);padding:9px 18px;border-radius:16px 6px 16px 6px;transition:.15s} .subtab:hover{background:rgba(189,166,232,.14)} .subtab.on{color:var(--space);border-color:transparent;background:var(--lav);box-shadow:0 0 14px rgba(189,166,232,.4)}
+  .preset{border:1px dashed var(--line-amber);border-radius:9px;padding:14px 16px;margin-top:6px;background:rgba(240,169,59,.05)} .preset .ptitle{font-weight:800;font-size:13px;display:flex;align-items:center;gap:8px} .preset .pdesc{font-size:11.5px;color:var(--faint);margin:4px 0 12px}
+  .levelseg{display:inline-flex;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px} .levelseg button{font-weight:700;font-size:12px;padding:7px 16px;border:0;cursor:pointer;background:transparent;color:var(--muted);transition:.15s} .levelseg button.on{background:var(--amber);color:var(--space)}
+  .presetgrid{display:flex;gap:8px;flex-wrap:wrap} .presetgrid button{font-weight:700;font-size:12px;padding:8px 14px;border-radius:14px 5px 14px 5px;border:1px solid var(--line);background:rgba(84,210,196,.08);color:var(--ivory);cursor:pointer;transition:.15s} .presetgrid button:hover{background:rgba(84,210,196,.2);border-color:var(--teal)} .presetgrid button.all{background:var(--rose);color:var(--space);border-color:transparent} .presetgrid button.rub{background:var(--lav);color:var(--space);border-color:transparent}
+
+  .lead{color:var(--muted);font-size:13.5px;max-width:860px} .lead b{color:var(--amber-soft)}
+  .kgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-top:14px} .kcard{background:rgba(5,6,13,.5);border:1px solid var(--line);border-radius:8px;padding:13px 15px} .kcard .t{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--teal);margin-bottom:5px} .kcard p{margin:0;font-size:13px} .kcard .big{font-size:15px;font-weight:800;color:var(--ivory)}
+  .order{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px} .ostep{display:flex;align-items:center;gap:8px;background:rgba(84,210,196,.08);border:1px solid var(--line);border-radius:16px;padding:7px 14px;font-size:13px} .ostep b{color:var(--teal)} .oarrow{color:var(--faint);font-family:var(--mono)}
+  .toolcard{margin-top:16px;border-radius:9px;border:1px solid var(--line);overflow:hidden;background:rgba(5,6,13,.3)}
+  .tier{display:grid;grid-template-columns:88px 1fr;border-top:1px solid var(--line)} .tier:first-of-type{border-top:0} .tier .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--faint);padding:11px 10px;background:rgba(5,6,13,.4);display:flex;align-items:flex-start} .tier .val{padding:11px 14px;font-size:13.5px} .tier.def .val{font-weight:700}
+  .ramen{background:rgba(232,122,150,.07);border-left:3px solid var(--rose)} .ramen .val .nb{font-family:var(--mono);font-size:10px;color:var(--rose);letter-spacing:.08em;margin-left:6px} .oneword .val{color:var(--amber-soft);font-weight:700}
+  .layer{padding:13px 14px 4px} .layer h4{margin:0 0 8px;font-size:13px;display:flex;align-items:center;gap:8px} .layer h4 .pill{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.06em;color:var(--space);padding:3px 9px;border-radius:10px} .pill.know{background:var(--lav)} .pill.do{background:var(--teal)} .pill.why{background:var(--amber)}
+  .chk{display:flex;gap:9px;align-items:flex-start;padding:6px 4px;border-radius:6px;cursor:pointer;transition:.12s} .chk:hover{background:rgba(189,166,232,.06)} .chk input{margin-top:3px;width:16px;height:16px;accent-color:var(--teal);flex:none;cursor:pointer} .chk span{font-size:13px} .chk.checked span{color:var(--ok)}
+  .why-note{font-size:12.5px;color:var(--muted);background:rgba(240,169,59,.06);border-left:3px solid var(--amber);padding:9px 13px;border-radius:0 6px 6px 0;margin:8px 4px 4px} .pitfall{font-size:12.5px;color:var(--muted);margin:8px 4px 6px;padding-left:4px} .pitfall b{color:var(--rose)} .toolprog{font-family:var(--mono);font-size:11px;color:var(--muted);margin:6px 0 0 4px}
+  table.rub{border-collapse:collapse;width:100%;font-size:13px;margin-top:10px;overflow:hidden;border-radius:8px} table.rub th{background:var(--amber-soft);color:var(--space);font-weight:800;font-size:11px;text-align:left;padding:9px 11px} table.rub td{padding:9px 11px;border-bottom:1px solid rgba(189,166,232,.1);vertical-align:top} table.rub td:first-child{font-weight:700;white-space:nowrap;color:var(--teal)}
+  .goal{margin-top:12px;font-size:13px;background:rgba(84,210,196,.08);border:1px solid var(--line);border-radius:8px;padding:11px 14px} .goal b{color:var(--teal)}
+
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap} .tab{font-weight:700;font-size:11.5px;letter-spacing:.04em;color:var(--muted);background:rgba(189,166,232,.07);border:1px solid var(--line);border-radius:13px 13px 0 0;padding:8px 15px;cursor:pointer;border-bottom:0;transition:.15s} .tab.active{color:var(--space);background:var(--teal);border-color:transparent}
+  .out{font-family:var(--mono);font-size:12.5px;line-height:1.7;color:#e0e7f4;background:rgba(3,4,10,.74);border:1px solid var(--line);border-radius:8px;padding:16px 18px;white-space:pre-wrap;word-break:break-word;max-height:520px;overflow:auto}
+  .out::-webkit-scrollbar,.tablewrap::-webkit-scrollbar,.modal-body::-webkit-scrollbar{height:9px;width:9px} .out::-webkit-scrollbar-thumb,.modal-body::-webkit-scrollbar-thumb{background:rgba(84,210,196,.3);border-radius:5px}
+  .dock-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:150;font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;background:rgba(7,9,16,.97);border:1px solid var(--amber);color:var(--amber-soft);padding:11px 20px;border-radius:10px;box-shadow:0 0 28px rgba(240,169,59,.35);opacity:0;pointer-events:none;transition:.28s} .toast.show{opacity:1;transform:translateX(-50%) translateY(0)} .toast.big{font-size:14px;border-color:var(--gold);color:var(--gold);box-shadow:0 0 40px rgba(245,215,122,.5)} .toast.err{border-color:var(--err);color:var(--err)}
+  .filein{display:none}
+  #fx{position:fixed;inset:0;z-index:110;pointer-events:none;overflow:hidden} .pcl{position:absolute;font-size:22px;will-change:transform,opacity;animation:fly 1.5s ease-out forwards} @keyframes fly{0%{opacity:0;transform:translateY(0) scale(.4) rotate(0)}15%{opacity:1}100%{opacity:0;transform:translateY(var(--dy)) translateX(var(--dx)) scale(1.1) rotate(var(--rot))}}
+  .flash{position:fixed;inset:0;z-index:105;pointer-events:none;background:radial-gradient(circle at 50% 42%,rgba(245,215,122,.4),transparent 45%);opacity:0;animation:fl .7s ease-out forwards} @keyframes fl{0%{opacity:.9}100%{opacity:0}}
+
+  .overlay{position:fixed;inset:0;z-index:130;background:rgba(3,4,10,.78);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto} .overlay.open{display:flex}
+  .modal{width:min(840px,100%);background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line-amber);border-radius:10px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+  .modal-top{display:flex;align-items:stretch;gap:14px} .modal-top .block{width:70px;background:var(--amber);border-radius:0 0 24px 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px} .modal-top .block b{color:var(--space);font-family:var(--mono);font-size:11px;letter-spacing:.1em} .modal-top h2{font-size:18px;margin:14px 0 6px;flex:1} .modal-top .close{margin:14px 18px 0 0;background:var(--rose);color:var(--space);border:0;width:32px;height:32px;border-radius:50%;font-size:17px;cursor:pointer;font-weight:800}
+  .modal-body{padding:8px 26px 30px;max-height:74vh;overflow:auto}
+  .modal-body h3{font-size:14px;color:var(--amber-soft);margin:22px 0 8px;padding-left:10px;border-left:3px solid var(--amber)} .modal-body p,.modal-body li{font-size:13.5px;color:var(--ivory)} .modal-body ol,.modal-body ul{padding-left:22px}
+  .modal-body .kbd{font-family:var(--mono);background:rgba(84,210,196,.12);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:12px;color:var(--teal)} .modal-body .note{font-size:12.5px;color:var(--muted);background:rgba(189,166,232,.08);border-left:3px solid var(--lav);padding:10px 14px;border-radius:0 6px 6px 0;margin:10px 0}
+  .step{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;margin:8px 0} .step .n{width:26px;height:26px;border-radius:50%;background:var(--teal);color:var(--space);display:grid;place-items:center;font-weight:800;font-size:13px}
+
+  /* export center */
+  .seg{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px} .seg button{font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:14px 5px 14px 5px;border:1px solid var(--line);background:rgba(189,166,232,.06);color:var(--ivory);cursor:pointer;transition:.15s} .seg button.on{background:var(--lav);color:var(--space);border-color:transparent} .seg button:hover{filter:brightness(1.06)}
+  .fmtgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-top:6px}
+  .fmtbtn{display:flex;flex-direction:column;gap:3px;align-items:flex-start;padding:13px 15px;border-radius:10px;border:1px solid var(--line);background:rgba(84,210,196,.07);cursor:pointer;transition:.15s} .fmtbtn:hover{background:rgba(84,210,196,.16);border-color:var(--teal);transform:translateY(-1px)} .fmtbtn b{font-size:14px} .fmtbtn span{font-size:11px;color:var(--muted)}
+
+  /* snapshot/log lists */
+  .rowlist{display:flex;flex-direction:column;gap:8px;margin-top:8px} .rowitem{display:flex;gap:10px;align-items:center;background:rgba(5,6,13,.5);border:1px solid var(--line);border-radius:8px;padding:9px 12px} .rowitem .meta{flex:1;min-width:0} .rowitem .meta b{font-size:13px} .rowitem .meta small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--faint)} .rowitem button{font-weight:700;font-size:11.5px;padding:6px 11px;border-radius:10px 4px 10px 4px;border:0;cursor:pointer;color:var(--space)} .rowitem .rest{background:var(--teal)} .rowitem .del{background:var(--rose)}
+  .logline{font-family:var(--mono);font-size:11.5px;padding:6px 9px;border-bottom:1px solid rgba(189,166,232,.08);white-space:pre-wrap;word-break:break-word} .logline .lt{color:var(--faint)} .logline.ERROR .tp,.logline.PROMISE .tp{color:var(--err);font-weight:700} .logline.INFO .tp{color:var(--teal)} .logbox{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:rgba(3,4,10,.6);margin-top:8px}
+  .emptybox{color:var(--faint);font-size:12.5px;padding:18px;text-align:center}
+
+  /* PDF print root */
+  #printroot{display:none}
+  @media print{
+    body{background:#fff}
+    body.printing>*{display:none!important}
+    body.printing>#printroot{display:block!important}
+    #printroot{color:#16181f;font-family:var(--sans);padding:8px 4px}
+    #printroot h1{font-size:20px;border-bottom:2px solid #e3a93b;padding-bottom:6px;margin:0 0 10px} #printroot h2{font-size:16px;color:#9b3d6e;margin:18px 0 6px} #printroot h3{font-size:13.5px;margin:14px 0 5px;border-left:3px solid #e3a93b;padding-left:8px}
+    #printroot p,#printroot li{font-size:12px} #printroot blockquote{color:#555;border-left:3px solid #ccc;margin:6px 0;padding:2px 12px;font-size:11.5px}
+    #printroot table{border-collapse:collapse;width:100%;font-size:11px;margin:6px 0} #printroot th,#printroot td{border:1px solid #bbb;padding:5px 7px;text-align:left;vertical-align:top} #printroot th{background:#f3e6c8}
+    #printroot hr{border:0;border-top:1px solid #ccc;margin:14px 0}
+    .toast{display:none!important}
+  }
+
+  @media(max-width:880px){.shell{grid-template-columns:1fr}nav.deck{padding:0 0 14px}.deck-elbow{border-radius:0}.deck-rail{border-left:0;border-top:var(--rail) solid var(--amber)}.modules{flex-direction:row;overflow-x:auto;padding-bottom:6px}.mod{min-width:190px}main.stage{padding:18px 14px 50px}.phead .blk{width:48px}.tier{grid-template-columns:64px 1fr}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}#boot{display:none}}
+</style>
+</head>
+<body>
+<div class="starfield" id="starfield"><div class="stars s1"></div><div class="stars s2"></div><div class="stars s3"></div></div>
+
+<div id="boot"><div class="boot-core"><div class="boot-ring">🐰</div><h2>うさうさ宇宙船ブリッジ・スイート ✨</h2><div class="boot-log" id="bootLog">SYSTEM BOOT...</div><div class="boot-bar"><span id="bootBar"></span></div><button class="boot-skip" id="bootSkip">▸ SKIP / 起動をスキップ</button></div></div>
+
+<header class="topbar">
+  <div class="brand"><div class="badge">🐰</div><div><h1>うさうさ宇宙船ブリッジ・スイート ✨<span class="verchip" id="verchip">PRO</span></h1><div class="sub">AI ROLLOUT NAVIGATOR ＋ CAPABILITY MAP ／ v5.0.0 PRO</div></div></div>
+  <div class="spacer"></div>
+  <div class="toolbtns">
+    <button class="hud lav" id="btnHelp">🛈 使い方</button>
+    <button class="hud teal" id="btnExport">📤 出力</button>
+    <button class="hud ghost" id="btnSnap">💾 一次保存</button>
+    <button class="hud ghost" id="btnLog">🩺 ログ</button>
+    <button class="hud ghost" id="btnSfx">🔇 SFX</button>
+    <button class="hud ghost" id="btnSave">⤓ JSON保存</button>
+    <button class="hud ghost" id="btnLoad">⤒ 読込</button>
+    <input type="file" id="fileLoad" class="filein" accept="application/json,.json">
+  </div>
+  <div class="sysline"><span class="dot"></span><b>ALL SYSTEMS NOMINAL</b> ／ <span id="storemode"></span> ／ <span id="ticker">航行中…</span> ／ <span id="clock">--:--:--</span></div>
+</header>
+
+<div class="shell">
+  <nav class="deck">
+    <div class="deck-elbow"><span class="cap">MISSION DECK</span></div>
+    <div class="deck-rail">
+      <p class="deck-title">航行フェーズ</p>
+      <div class="modules" id="modules"></div>
+      <div class="deck-foot">
+        <span class="lcars-label">ROLLOUT 進捗</span>
+        <div class="meter"><span id="globalMeter"></span></div>
+        <div class="pct" id="globalPct">0%</div>
+        <div class="deck-mini"><button id="miniSnap">💾 一次保存</button><button id="miniExport">📤 出力</button></div>
+      </div>
+    </div>
+  </nav>
+  <main class="stage" id="stage"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="fx"></div>
+<div id="printroot"></div>
+
+<div class="overlay" id="overlay"><div class="modal"><div class="modal-top"><div class="block"><b id="modalTag">INFO</b></div><h2 id="modalTitle"></h2><button class="close" id="modalClose">×</button></div><div class="modal-body" id="modalBody"></div></div></div>
+
+<script>
+/* ============== うさうさ宇宙船ブリッジ・スイート v5.0.0 PRO ============== */
+const APP_VERSION="v5.0.0 PRO";   /* 環境自動判定の単一HTML（通常/セッション） */
+
+/* ---- error log (最初に定義) ---- */
+const errlog=[];
+function logEvent(type,msg,extra){errlog.unshift({t:new Date().toLocaleString("ja-JP"),type,msg:String(msg),extra:extra?String(extra):""});if(errlog.length>250)errlog.pop();updateLogBadge();}
+function errCount(){return errlog.filter(e=>e.type==="ERROR"||e.type==="PROMISE").length;}
+function updateLogBadge(){const b=document.getElementById("btnLog");if(!b)return;const c=errCount();b.innerHTML="🩺 ログ"+(c?`<span class="dotbadge">${c}</span>`:"");}
+window.addEventListener("error",e=>logEvent("ERROR",e.message,(e.filename||"")+":"+(e.lineno||"")));
+window.addEventListener("unhandledrejection",e=>logEvent("PROMISE",(e.reason&&e.reason.message)||e.reason||"unknown",""));
+
+/* ---- storage abstraction ---- */
+let memStore={};
+function lsOk(){try{localStorage.setItem("__t","1");localStorage.removeItem("__t");return true;}catch(e){return false;}}
+const HAS_LS=lsOk();
+const MODE_LABEL=HAS_LS?"通常モード（自動保存）":"セッションモード（メモリ）";
+function sget(k){if(HAS_LS){try{return localStorage.getItem(k);}catch(e){logEvent("ERROR","storage.get "+k,e.message);return null;}}return (k in memStore)?memStore[k]:null;}
+function sset(k,v){if(HAS_LS){try{localStorage.setItem(k,v);return true;}catch(e){logEvent("ERROR","storage.set "+k,e.message);return false;}}memStore[k]=v;return true;}
+
+/* ============== DATA ============== */
+const PROJECT_FIELDS=[
+  {key:"name",label:"案件名",ph:"例）2026年度 新卒AI開発研修 導入PoC"},
+  {key:"client",label:"クライアント/組織",ph:"例）社内IT教育事業本部 ／ ◯◯株式会社"},
+  {key:"period",label:"想定期間",ph:"例）2026/07 - 2026/09（パイロット含む）"},
+  {key:"main",label:"メイン講師",ph:"役職名で記載（例：主担当講師）"},
+  {key:"sub",label:"サブ講師",ph:"役職名で記載（例：副担当講師）"},
+  {key:"audience",label:"対象者",ph:"例）新卒エンジニア／講師チーム"},
+];
+const PHASES=[
+  {id:"ph1",code:"PH-01",glyph:"🎯",title:"現状分析・ゴール設定",mission:"研修後に<b>できること</b>をKPIとして先に定義し、組織が求める成果から逆算する。",
+    fields:[
+      {key:"targets",type:"textarea",label:"対象者プロファイル",hint:"受講者・講師チームの前提スキル／役割を一言で",ph:"例）新卒10名（基礎あり/AI未経験）、講師3名"},
+      {key:"painPoints",type:"list",label:"実務課題（ヒアリング結果）",hint:"現場で困っていること。事実ベースで",ph:"例）コードレビューに時間がかかる"},
+      {key:"literacyGap",type:"textarea",label:"AIリテラシーギャップ（現状）",hint:"今できることと必要なことの差分",ph:"例）チャット利用止まり。エージェント/RAGは未経験。"},
+      {key:"kpis",type:"table",label:"研修後KPI（逆算起点）",hint:"「研修後にできること」を測定可能に",columns:[{key:"item",label:"できること(KPI項目)",type:"text",ph:"AI駆動で詳細設計書を起案できる"},{key:"metric",label:"指標",type:"text",ph:"起案リードタイム"},{key:"target",label:"目標値",type:"text",ph:"従来比 50%短縮"},{key:"when",label:"測定タイミング",type:"text",ph:"研修最終演習"}]},
+      {key:"org",type:"table",label:"組織が求める成果との紐付け",hint:"生産性・レビュー速度・教材作成時間など",columns:[{key:"outcome",label:"組織が求める成果",type:"text",ph:"コードレビュー速度の向上"},{key:"link",label:"紐付くKPI/指標",type:"text",ph:"レビュー1件あたり時間"},{key:"base",label:"現状ベースライン",type:"text",ph:"平均45分/件"}]},
+    ]},
+  {id:"ph2",code:"PH-02",glyph:"🗺️",title:"ケイパビリティマップ作成",mission:"AIツール別の必要スキルを<b>知識・実践・設計思想</b>の3層で分解し、ルーブリックを定義。<b>「学ぶ（マップ）」</b>タブで初心者/実務の標準形を参照・投入できます。",cap:true,
+    fields:[
+      {key:"tools",type:"table",label:"ツール別ケイパビリティ（3層分解）",hint:"マップから投入後、案件向けに編集",columns:[{key:"tool",label:"AIツール",type:"text",ph:"Claude Code"},{key:"knowledge",label:"知識(知っている)",type:"textarea",ph:"CLIエージェントの動作原理・権限モデル"},{key:"practice",label:"実践(できる)",type:"textarea",ph:"安全にタスク委譲し差分レビュー"},{key:"philosophy",label:"設計思想(なぜ)",type:"textarea",ph:"レビュー責任を持つ前提で自動化範囲を線引き"}]},
+      {key:"rubric",type:"table",label:"評価ルーブリック",hint:"操作でなく行動で測る",columns:[{key:"level",label:"レベル",type:"text",ph:"L3 自走"},{key:"def",label:"定義",type:"text",ph:"未知タスクでも設計判断しながら使える"},{key:"behavior",label:"観察される行動例",type:"textarea",ph:"出力を検証してから採用する"}]},
+      {key:"axis",type:"list",label:"共通評価軸（任意）",hint:"全ツール横断の観点",ph:"例）出力の検証習慣"},
+    ]},
+  {id:"ph3",code:"PH-03",glyph:"🧪",title:"教材・演習設計",mission:"操作でなく<b>「なぜそう設計するか」</b>の思想込み。演習はAI駆動型（Claude採点ループ）。単一HTML等で再配布。",
+    fields:[
+      {key:"philosophy",type:"textarea",label:"教材の設計思想（なぜ）",hint:"WHY→WHAT→HOWのWHY",ph:"例）AIを“思考の壁打ち相手”として扱う姿勢を育てる"},
+      {key:"materials",type:"table",label:"教材ユニット設計",hint:"込める思想を1列に",columns:[{key:"title",label:"教材タイトル",type:"text",ph:"AI駆動 詳細設計の型"},{key:"format",label:"形式",type:"text",ph:"単一HTML / PPT"},{key:"idea",label:"込める思想",type:"textarea",ph:"設計判断の根拠を言語化させる"},{key:"time",label:"想定時間",type:"text",ph:"90分"}]},
+      {key:"exercises",type:"table",label:"AI駆動型 演習設計",hint:"Claude採点ループを明示",columns:[{key:"name",label:"演習名",type:"text",ph:"設計書レビュー往復"},{key:"task",label:"課題内容",type:"textarea",ph:"要件から設計書を起案→AIレビュー→改善"},{key:"loop",label:"AI採点ループの設計",type:"textarea",ph:"ルーブリックをプロンプト化→点数+指摘→再提出"},{key:"pass",label:"合否基準",type:"text",ph:"指摘3観点を自力で改善"}]},
+      {key:"format",type:"textarea",label:"配布形式の方針",hint:"再配布・オフライン・依存ゼロ等",ph:"例）外部依存ゼロの単一HTMLで配布"},
+    ]},
+  {id:"ph4",code:"PH-04",glyph:"🛰️",title:"パイロット研修・評価",mission:"小規模で先行実施し実測FBを収集。基準は「操作できた」でなく<b>「実務で使えた」</b>。",
+    fields:[
+      {key:"scope",type:"textarea",label:"パイロット対象・規模",hint:"誰を/何人で/どの範囲で",ph:"例）新卒3名＋講師1名で演習2本を先行"},
+      {key:"criteria",type:"table",label:"評価基準（実務適用ベース）",hint:"「実務で使えた」を観察可能に",columns:[{key:"axis",label:"評価軸",type:"text",ph:"実務転用"},{key:"std",label:"「実務で使えた」基準",type:"textarea",ph:"実タスクに適用し成果物を出せた"},{key:"how",label:"測定方法",type:"text",ph:"成果物レビュー＋本人申告"}]},
+      {key:"feedback",type:"list",label:"フィードバック収集方法",hint:"事実ベースで",ph:"例）演習直後アンケート（5段階＋自由記述）"},
+      {key:"risks",type:"list",label:"想定リスク・観察ポイント（任意）",hint:"特に見たい懸念",ph:"例）難易度が高すぎて手が止まる"},
+    ]},
+  {id:"ph5",code:"PH-05",glyph:"📦",title:"標準化・横展開",mission:"AIコードレビュー等の仕組みをドキュメント化。<b>再現可能なパッケージ</b>としてテンプレ化。",
+    fields:[
+      {key:"docs",type:"list",label:"ドキュメント化する仕組み",hint:"属人化を解く対象",ph:"例）AIコードレビューの依頼テンプレ"},
+      {key:"pkg",type:"table",label:"再現パッケージ構成",hint:"再現性のポイントを明記",columns:[{key:"item",label:"パッケージ要素",type:"text",ph:"進行台本"},{key:"content",label:"内容",type:"textarea",ph:"時間配分・声かけ・つまずき対応"},{key:"repro",label:"再現性のポイント",type:"textarea",ph:"判断基準を明文化し経験差を吸収"}]},
+      {key:"script",type:"table",label:"進行台本テンプレ",hint:"横展開でそのまま使える骨子",columns:[{key:"step",label:"進行ステップ",type:"text",ph:"導入：なぜAIを使うのか"},{key:"time",label:"所要",type:"text",ph:"10分"},{key:"action",label:"講師アクション",type:"textarea",ph:"WHYを共有→ゴール提示"},{key:"note",label:"注意点",type:"text",ph:"操作説明に入りすぎない"}]},
+    ]},
+  {id:"ph6",code:"PH-06",glyph:"🔄",title:"継続改善サイクル",mission:"技術トレンドを四半期で更新。ナレッジ共有会で循環。<b>人ではなく仕組み</b>で回す。",
+    fields:[
+      {key:"quarterly",type:"table",label:"四半期アップデート運用",hint:"何を/頻度/誰がトリガー",columns:[{key:"target",label:"アップデート対象",type:"text",ph:"対応AIツール一覧"},{key:"freq",label:"頻度",type:"text",ph:"四半期"},{key:"trigger",label:"トリガー",type:"text",ph:"主要モデルの更新時"},{key:"owner",label:"担当(役職)",type:"text",ph:"教材責任者"}]},
+      {key:"share",type:"textarea",label:"講師ナレッジ共有会の運用",hint:"頻度・形式・記録先（ブレームレスに）",ph:"例）月次30分。失敗も“仕組みの改善案”として共有しNotionに記録。"},
+      {key:"metrics",type:"list",label:"継続ウォッチ指標",hint:"陳腐化・効果を見る指標",ph:"例）受講後の実務転用率"},
+    ]},
+];
+
+const INTRO={
+  beginner:{lead:`<b>結論</b>：4ツールを「<b>知っている→できる→なぜ使うか</b>」の順で。各ツールは <b>定義→たとえ🍜→詳細→一言</b>。実践はチェックで自己評価。`,
+    cards:[{t:"3つの層とは",h:`<span class="big">知識</span>＝説明できる<br><span class="big">実践</span>＝やってみてできる<br><span class="big">設計思想</span>＝なぜそうするか言える`},{t:"学ぶ順番",h:`WHY→WHAT→HOW。<b>HOWはCursorから</b>。`},{t:"到達目標",h:`<span class="big">L1→L2→L3</span>。「操作できた」より<b>「判断して使えた」</b>。`}],
+    order:["<b>WHY</b> なぜ使うのか","<b>WHAT</b> 定義とたとえ","<b>HOW</b> 小さく触る"]},
+  practical:{lead:`<b>結論</b>：実務では「<b>文脈を設計し・出力を検証し・横展開する</b>」。操作はできる前提で<b>再現性と責任分界</b>に踏み込む。`,
+    cards:[{t:"3つの層とは（実務）",h:`<span class="big">知識</span>＝仕組みを説明できる<br><span class="big">実践</span>＝設計・改善できる<br><span class="big">設計思想</span>＝なぜその設計か言える`},{t:"伸ばす順番",h:`文脈・権限を<b>設計</b>→出力を<b>検証</b>→<b>横展開</b>。`},{t:"到達目標",h:`全ツールで <span class="big">L2→L3</span>、担当領域で <span class="big">L4</span>。`}],
+    order:["<b>設計</b> 文脈・権限","<b>検証</b> 測って改善","<b>標準化</b> 横展開"]},
+};
+const CAP_TOOLS={
+  beginner:[
+    {id:"cursor",code:"T1",color:"lav",name:"Cursor",role:"AIコード補完エディタ",def:"コードの続きや修正を、AIが提案してくれるエディタ。",ramen:"メモを書くと続きを書いてくれる「気の利く見習い」。味見と提供の判断は店主（あなた）。",detail:"入口は3つ。Tab補完／Cmd(Ctrl)+K（範囲を言葉で編集）／Chat（相談）。開いているファイル等が文脈として渡る。",oneword:"AIは下書き担当、採用判断は自分。",know:["Tab補完・Cmd(Ctrl)+K・Chatの違いを説明できる","AIに何が文脈として渡るかイメージできる"],doo:["コメントから続きの補完を引き出せる","自然言語で小さな修正を依頼できる","エラー文を貼って原因の見当をつけられる"],why:["提案を必ず読んでから採用する理由を言える"],whyLearn:"一番触りやすく「任せる／判断する」の基本感覚が身につく入口だから。",pitfall:"提案を読まずTabで受け入れる／文脈に無いことを聞いて混乱する。"},
+    {id:"claudecode",code:"T2",color:"teal",name:"Claude Code",role:"CLIで動くAIエージェント",def:"ターミナルで動き、ファイル編集やコマンド実行までやってくれるAI。",ramen:"仕込みから片付けまで任せられる「住み込みの弟子」。新メニューを出す前に必ず味見（差分確認）して許可。",detail:"何を勝手にやり何に許可が要るかの感覚が大切。提案された差分(diff)を承認/却下しながら進める。",oneword:"自動化しても責任は人間。差分を読んでから承認。",know:["CLIで動くエージェントの概念を説明できる","ファイル変更・コマンド実行に許可が要る範囲をイメージできる"],doo:["簡単なタスクを自然言語で頼める","差分(diff)を読んで承認/却下できる","コミット前に差分を確認する習慣がある"],why:["「承認の前に必ず差分を読む」を徹底する理由を言える"],whyLearn:"AIに“任せる”体験の入口。責任は人間に残るという感覚が育つ。",pitfall:"差分を読まず全部承認／許可範囲を理解せず不安になる。"},
+    {id:"multi",code:"T3",color:"amber",name:"マルチエージェント",role:"役割分担した複数AIの協働",def:"役割を分けた複数のAIが協力して1つの仕事を進める考え方。",ramen:"麺場・スープ場・盛り付け場で分担した弟子たち。一人に全部やらせない方が、どこで失敗したか分かる。",detail:"まとめ役（オーケストレーター）と作業役（ワーカー）。役割を分けると検証しやすい。",oneword:"1つのAIに全部やらせない。分けると検証しやすい。",know:["「複数AIが役割分担して協働する」概念を説明できる","まとめ役と作業役の違いをイメージできる"],doo:["設計役・実装役・レビュー役に分けて依頼を回せる","各役の入力と出力をつなげられる"],why:["なぜ責務を分けると検証しやすいか言える"],whyLearn:"「全部丸投げしない」分割思考の基礎。失敗の切り分けが上手くなる。",pitfall:"役割が曖昧で“誰の出力か”分からない／分けすぎて手間が増える。"},
+    {id:"rag",code:"T4",color:"rose",name:"RAG（検索拡張生成）",role:"資料を参照して答えさせる仕組み",def:"AIに外部資料を渡し、それを参照しながら答えさせる仕組み。",ramen:"注文のたびに秘伝のレシピノートを開いて確認してから作る。暗記に頼らないから出鱈目を言いにくい。",detail:"関連箇所を検索（ベクトル検索）して渡すイメージ。幻覚（でっち上げ）を減らす効果がある。",oneword:"覚えさせるのでなく、その場で参照させる。根拠確認が前提。",know:["検索拡張生成の概念を説明できる","なぜ幻覚対策になるかイメージできる"],doo:["ドキュメントを取り込んで質問できる","出典つきで答えさせ根拠を確認できる"],why:["「根拠の確認を前提にする」理由を言える"],whyLearn:"答えを鵜呑みにせず「根拠を見る」習慣の入口になる。",pitfall:"出典を確認せず答えだけ信じる／資料に無いことまで信じる。"},
+  ],
+  practical:[
+    {id:"cursor",code:"T1",color:"lav",name:"Cursor",role:"文脈を設計して任せるエディタ",def:"プロジェクト規約や複数ファイルの文脈を渡し、まとまった変更を任せられるエディタ。",ramen:"ベテラン板前に「店のレシピ帳（規約）」を読ませてから任せる。何を見せるか（文脈）で仕上がりが決まる。",detail:".cursorrules等で規約を学習／@記法でファイル・ドキュメント参照／Agent(Composer)で複数ファイル横断。",oneword:"コンテキスト設計が出力品質を決める。",know:[".cursorrules等のコンテキスト制御を説明できる","@記法での文脈参照を理解している","Agentが触る範囲とリスクを把握している"],doo:["ルールに規約を記述し出力を沿わせる","複数ファイル変更を指示し差分を絞ってレビュー","文脈を取捨選択し的外れを減らす"],why:["「渡す情報の取捨選択そのものが設計対象」だと説明できる"],whyLearn:"品質のばらつきは多くが文脈設計の差。ここを握ると再現性が上がる。",pitfall:"文脈を渡しすぎてノイズで精度低下／規約をルール化せず属人化。"},
+    {id:"claudecode",code:"T2",color:"teal",name:"Claude Code",role:"計画→実行→検証で任せる",def:"プロジェクトメモリと権限設計を前提に、計画→実行→検証で大きめの作業まで任せるCLIエージェント。",ramen:"店のマニュアル（CLAUDE.md）を渡した弟子に計画→作業→味見（テスト）まで回す。任せる範囲は店主が線引き。",detail:"CLAUDE.md等で規約と再現性／計画と実行を分ける／権限スコープ設計／テストを品質ゲートに。",oneword:"「任せる／任せない」の境界を設計する。",know:["CLAUDE.md等のプロジェクトメモリの役割を説明できる","計画と実行の分離・権限スコープ設計を理解している"],doo:["規約をCLAUDE.mdに記述し再現性を担保","大きめのリファクタを計画→実行→検証で回す","テスト生成・実行で合否ゲートにできる"],why:["「レビュー責任を人間が持つ前提で自動化範囲を線引き」を設計として説明できる"],whyLearn:"任せる範囲を仕組みで決めると、速度と安全を両立できる。",pitfall:"計画を確認せず実行に任せて手戻り／権限を広げすぎ意図しない変更。"},
+    {id:"multi",code:"T3",color:"amber",name:"マルチエージェント",role:"オーケストレーション設計",def:"タスクを分解し複数エージェントをオーケストレーションして品質と効率を両立する設計。",ramen:"厨房を麺・スープ・盛りに分け、フロア長（まとめ役）が割り振り、検品役が出す前にチェック。失敗時の段取りも決める。",detail:"オーケストレーション設計／状態の受け渡し／リトライ・ハンドオフ／コストとレイテンシのトレードオフ。",oneword:"自律性と制御のバランスを仕組みで設計する。",know:["オーケストレーションと状態受け渡しを説明できる","リトライ/ハンドオフ・コスト/レイテンシの綱引きを理解している"],doo:["タスク分解と並列/逐次を設計できる","共有メモリ・ツール呼び出しを設計できる","評価役で品質ゲートを置ける"],why:["「暴走を防ぐ人間チェックポイントを仕組みで置く」を設計として説明できる"],whyLearn:"規模が上がるほど“どこで止めて人が確認するか”の設計が成否を分ける。",pitfall:"増やしすぎてコスト/遅延が膨らむ／状態受け渡しが曖昧で不安定。"},
+    {id:"rag",code:"T4",color:"rose",name:"RAG（検索拡張生成）",role:"検索品質を設計する仕組み",def:"チャンク設計・検索精度・出典制御まで踏み込み、根拠ある回答を安定供給する仕組み。",ramen:"レシピ帳を「探しやすい単位（チャンク）」に整理し棚（メタデータ）で分類。一番合うページを的確に出し、出典の確かさで答え方を変える。",detail:"チャンク分割・埋め込み・ベクトルDB／検索精度評価（再現率・適合率）／リランキング・ハイブリッド検索。",oneword:"検索品質が回答品質を決める。「事実は検索・推論はLLM」。",know:["チャンク・埋め込み・ベクトルDBの役割を説明できる","検索精度指標・リランキング/ハイブリッド検索を理解している"],doo:["チャンク設計とメタデータ設計ができる","検索結果を評価し精度を改善できる","出典の信頼度に応じ回答を制御できる"],why:["「事実は検索・推論はLLM」の責務分離を設計として説明できる"],whyLearn:"信頼性は検索段階でほぼ決まる。ここを設計できると幻覚を構造的に減らせる。",pitfall:"チャンクが大/小すぎて検索がぶれる／精度を測らず体感で調整。"},
+  ],
+};
+const RUBRIC_GOAL={beginner:`🎯 <b>初心者ゴール目安</b>：4ツールでL1、主要ツール（Cursor/Claude Code）でL2〜L3。`,practical:`🎯 <b>実務ゴール目安</b>：全ツールでL2〜L3、担当領域でL4。`};
+const RUBRIC_ROWS=[["L1 認知","用途と使いどころを説明できる","どんな場面で有効か自分の言葉で例示できる"],["L2 模倣","手順に沿って基本操作を再現できる","例示通りに操作し同じ結果を出せる"],["L3 自走","未知タスクでも判断しながら使える","タスクを分解し出力を検証してから採用する"],["L4 設計・指導","仕組みを作り他者に教えられる","運用ルールや採点基準を作りレビューできる"]];
+const RUBRIC_PRESET=RUBRIC_ROWS.map(r=>({level:r[0].split(" ")[0],def:r[1],behavior:r[2]}));
+
+/* ============== STATE ============== */
+const LS="usausa_bridge_suite_v4";
+let state=loadState();
+let activeId=state.activeId||"ph1";
+let ph2view="design",capLevel="beginner";
+function blankState(){const s={project:{},data:{},capChecks:{},activeId:"ph1"};PROJECT_FIELDS.forEach(f=>s.project[f.key]="");PHASES.forEach(p=>{s.data[p.id]={};p.fields.forEach(f=>{if(f.type==="list")s.data[p.id][f.key]=[""];else if(f.type==="table")s.data[p.id][f.key]=[mkRow(f)];else s.data[p.id][f.key]="";});});return s;}
+function mkRow(f){const r={};f.columns.forEach(c=>r[c.key]="");return r;}
+function loadState(){try{const r=sget(LS);if(r)return migrate(JSON.parse(r));}catch(e){logEvent("ERROR","loadState",e.message);}return blankState();}
+function migrate(s){if(!s.project)s.project={};PROJECT_FIELDS.forEach(f=>{if(s.project[f.key]==null)s.project[f.key]="";});if(!s.data)s.data={};if(!s.capChecks)s.capChecks={};PHASES.forEach(p=>{if(!s.data[p.id])s.data[p.id]={};p.fields.forEach(f=>{const c=s.data[p.id][f.key];if(f.type==="list"){if(!Array.isArray(c)||!c.length)s.data[p.id][f.key]=[""];}else if(f.type==="table"){if(!Array.isArray(c)||!c.length)s.data[p.id][f.key]=[mkRow(f)];}else{if(c==null)s.data[p.id][f.key]="";}});});s.activeId=s.activeId||"ph1";return s;}
+function persist(){try{sset(LS,JSON.stringify(state));}catch(e){logEvent("ERROR","persist",e.message);}}
+function activePhase(){return PHASES.find(x=>x.id===activeId);}
+
+/* ============== SNAPSHOTS（一次保存） ============== */
+const SNAP_KEY=LS+"_snaps";
+let snaps=[];
+try{const r=sget(SNAP_KEY);if(r)snaps=JSON.parse(r)||[];}catch(e){logEvent("ERROR","snaps load",e.message);}
+function saveSnap(name){try{state.activeId=activeId;const snap={id:Date.now(),name:name||("一次保存 "+new Date().toLocaleString("ja-JP")),data:JSON.stringify(state)};snaps.unshift(snap);if(snaps.length>10)snaps=snaps.slice(0,10);sset(SNAP_KEY,JSON.stringify(snaps));logEvent("INFO","一次保存: "+snap.name);blip(700,0.1,"triangle");toast("一次保存しました（"+snaps.length+"件）");if(document.querySelector("#snapList"))renderSnapModal();}catch(e){logEvent("ERROR","saveSnap",e.message);toast("一次保存に失敗（ログ参照）",false,true);}}
+function restoreSnap(id){try{const s=snaps.find(x=>x.id===id);if(!s)return;state=migrate(JSON.parse(s.data));activeId=state.activeId||"ph1";persist();renderNav();renderStage();closeModal();logEvent("INFO","復元: "+s.name);toast("復元しました");}catch(e){logEvent("ERROR","restoreSnap",e.message);toast("復元に失敗（ログ参照）",false,true);}}
+function delSnap(id){snaps=snaps.filter(x=>x.id!==id);sset(SNAP_KEY,JSON.stringify(snaps));renderSnapModal();}
+
+/* ============== HELPERS ============== */
+const $=s=>document.querySelector(s);
+function stripTags(s){return (s||"").replace(/<[^>]+>/g,"");}
+let toastT;
+function toast(m,big,isErr){const t=$("#toast");t.textContent=m;t.className="toast show"+(big?" big":"")+(isErr?" err":"");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),big?2600:1900);}
+function copyText(t){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast("コピーしました"),()=>fbc(t));}else fbc(t);}catch(e){logEvent("ERROR","copy",e.message);fbc(t);}}
+function fbc(t){try{const a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();document.execCommand("copy");document.body.removeChild(a);toast("コピーしました");}catch(e){logEvent("ERROR","copy fallback",e.message);toast("コピー失敗（ログ参照）",false,true);}}
+function download(n,t,m){try{const b=new Blob([t],{type:m||"text/plain;charset=utf-8"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(u),1500);logEvent("INFO","download: "+n);}catch(e){logEvent("ERROR","download "+n,e.message);toast("ダウンロード失敗（ログ参照）",false,true);}}
+function safeName(s){return (s||"案件").replace(/[\\/:*?"<>|]/g,"").replace(/\s+/g,"_")||"案件";}
+
+/* ============== PROGRESS ============== */
+function phaseFilled(p){let total=0,filled=0;p.fields.forEach(f=>{const v=state.data[p.id][f.key];if(f.type==="list"){total++;if(v.some(x=>x.trim()))filled++;}else if(f.type==="table"){total++;if(v.some(r=>Object.values(r).some(x=>(x||"").trim())))filled++;}else{total++;if((v||"").trim())filled++;}});return{total,filled,pct:total?Math.round(filled/total*100):0};}
+function globalProgress(){let t=0,f=0;PHASES.forEach(p=>{const r=phaseFilled(p);t+=r.total;f+=r.filled;});const pm=PROJECT_FIELDS.filter(x=>(state.project[x.key]||"").trim()).length;t+=1;f+=(pm>=3?1:pm/3);return Math.round(f/t*100);}
+
+/* ============== FX / SFX ============== */
+const EMO=["✨","🐰","🌟","💫","⭐","🎉"];let celebratedPhase={},celebratedAll=false;
+function spawnParticles(n){const fx=$("#fx");for(let i=0;i<n;i++){const e=document.createElement("div");e.className="pcl";e.textContent=EMO[Math.floor(Math.random()*EMO.length)];e.style.left=(38+Math.random()*24)+"%";e.style.top="34%";e.style.setProperty("--dx",(Math.random()*360-180)+"px");e.style.setProperty("--dy",(120+Math.random()*220)+"px");e.style.setProperty("--rot",(Math.random()*540-270)+"deg");e.style.animationDelay=(Math.random()*.18)+"s";fx.appendChild(e);setTimeout(()=>e.remove(),1750);}}
+function flash(){const f=document.createElement("div");f.className="flash";document.body.appendChild(f);setTimeout(()=>f.remove(),750);}
+function celebrate(p){flash();spawnParticles(16);toast(`${p.code} 入力コンプリート！🎉`);chord([523,659,784]);}
+function bigCelebrate(){flash();spawnParticles(34);toast("全フェーズ完了！ロードマップ完成 🚀✨",true);chord([523,659,784,1047]);}
+let actx=null,sfxOn=false;
+function ensureAudio(){if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){logEvent("ERROR","AudioContext",e.message);}}}
+function blip(freq,dur,type){if(!sfxOn||!actx)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type=type||"sine";o.frequency.value=freq;g.gain.setValueAtTime(0.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.12,actx.currentTime+0.01);g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+(dur||0.12));o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+(dur||0.12)+0.02);}catch(e){}}
+function chord(fr){if(!sfxOn||!actx)return;fr.forEach((f,i)=>setTimeout(()=>blip(f,0.35,"triangle"),i*70));}
+
+/* ============== NAV ============== */
+function renderNav(){const wrap=$("#modules");wrap.innerHTML="";PHASES.forEach(p=>{const pr=phaseFilled(p);const done=pr.pct>=70;if(pr.pct===100&&!celebratedPhase[p.id]){celebratedPhase[p.id]=true;celebrate(p);}if(pr.pct<100)celebratedPhase[p.id]=false;const b=document.createElement("button");b.className="mod"+(p.id===activeId?" active":"")+(done?" done":"");b.innerHTML=`<div class="lamp">${done?"✓":p.code.split("-")[1]}</div><div class="mtxt"><div class="mcode">${p.code}</div><div class="mname">${stripTags(p.title)}</div><div class="mprog">${pr.filled}/${pr.total} ・ ${pr.pct}%</div></div>`;b.onclick=()=>{activeId=p.id;state.activeId=p.id;persist();blip(560,0.08);renderNav();renderStage();window.scrollTo({top:0,behavior:"smooth"});};wrap.appendChild(b);});const g=globalProgress();$("#globalMeter").style.width=g+"%";$("#globalPct").textContent=g+"%";if(g>=100&&!celebratedAll){celebratedAll=true;bigCelebrate();}if(g<100)celebratedAll=false;}
+
+/* ============== STAGE ============== */
+const HEAD_COLORS=["amber","teal","lav","rose","amber","teal"];
+function renderStage(){const p=activePhase();const stage=$("#stage");stage.innerHTML="";stage.appendChild(renderProjectPanel());const idx=PHASES.indexOf(p),col=HEAD_COLORS[idx%6];const panel=document.createElement("section");panel.className="panel stagein";panel.innerHTML=`<div class="phead"><div class="blk blk-${col}"><b>${p.code.split("-")[1]}</b></div><div class="ht"><div class="ec">${p.code} ／ MISSION MODULE</div><h2>${p.glyph} ${stripTags(p.title)}</h2><div class="phase-mission">${p.mission}</div></div><div class="lamps"><i class="l-amber"></i><i class="l-teal"></i><i class="l-rose"></i></div></div><div class="pbody"></div>`;const body=panel.querySelector(".pbody");
+  if(p.cap){const st=document.createElement("div");st.className="subtabs";st.innerHTML=`<button class="subtab ${ph2view==='design'?'on':''}" data-v="design">✍️ 設計する</button><button class="subtab ${ph2view==='learn'?'on':''}" data-v="learn">📖 学ぶ（マップ）</button>`;body.appendChild(st);setTimeout(()=>st.querySelectorAll(".subtab").forEach(b=>b.onclick=()=>{ph2view=b.dataset.v;blip(620,0.07);renderStage();}),0);if(ph2view==="design"){body.appendChild(renderPresetBay());p.fields.forEach(f=>body.appendChild(renderField(p,f)));}else renderCapMap(body);}
+  else p.fields.forEach(f=>body.appendChild(renderField(p,f)));
+  stage.appendChild(panel);stage.appendChild(renderDock(p));}
+function renderProjectPanel(){const sec=document.createElement("section");sec.className="panel stagein";sec.innerHTML=`<div class="phead"><div class="blk blk-teal"><b>REG</b></div><div class="ht"><div class="ec">PROJECT REGISTRY</div><h2 style="font-size:15px">案件レジストリ <span style="font-size:12px;color:var(--muted);font-weight:400">／ 全フェーズ共通・役職名で</span></h2></div><div class="lamps"><i class="l-teal"></i><i class="l-amber"></i></div></div><div class="pbody"><div class="pg"></div></div>`;const g=sec.querySelector(".pg");g.style.display="grid";g.style.gap="12px";g.style.gridTemplateColumns="repeat(auto-fit,minmax(210px,1fr))";PROJECT_FIELDS.forEach(f=>{const c=document.createElement("div");c.innerHTML=`<label class="flabel" style="font-size:12px;font-weight:700;display:block;margin-bottom:5px">${f.label}</label>`;const i=document.createElement("input");i.type="text";i.placeholder=f.ph;i.value=state.project[f.key]||"";i.oninput=e=>{state.project[f.key]=e.target.value;persist();renderNav();};c.appendChild(i);g.appendChild(c);});return sec;}
+
+function renderPresetBay(){const bay=document.createElement("div");bay.className="preset";bay.innerHTML=`<div class="ptitle">🛸 標準スキルセット・プリセット</div><div class="pdesc">Cursor／Claude Code／マルチエージェント／RAG を3層で投入。投入後は案件に合わせて編集してください。</div><div class="levelseg" id="lvlseg"><button data-lv="beginner" class="${capLevel==='beginner'?'on':''}">初心者向け</button><button data-lv="practical" class="${capLevel==='practical'?'on':''}">実務向け</button></div><div class="presetgrid" id="pg2"></div>`;setTimeout(()=>{bay.querySelectorAll("#lvlseg button").forEach(b=>b.onclick=()=>{capLevel=b.dataset.lv;blip(600,0.07);renderStage();});const g=bay.querySelector("#pg2");CAP_TOOLS[capLevel].forEach(t=>{const b=document.createElement("button");b.textContent="＋ "+t.name;b.onclick=()=>injectTool(t);g.appendChild(b);});const all=document.createElement("button");all.className="all";all.textContent="⊕ 4ツール一括";all.onclick=injectAll;g.appendChild(all);const rub=document.createElement("button");rub.className="rub";rub.textContent="⊕ 標準ルーブリック";rub.onclick=injectRubric;g.appendChild(rub);},0);return bay;}
+function toolRow(t){return {tool:t.name,knowledge:t.know.join("／"),practice:t.doo.join("／"),philosophy:t.why.join("／")};}
+function clearSingleEmpty(a){if(a.length===1&&Object.values(a[0]).every(x=>!(x||"").trim()))a.length=0;}
+function injectTool(t){const a=state.data.ph2.tools;clearSingleEmpty(a);if(a.some(r=>(r.tool||"").trim()===t.name)){toast(t.name+" は投入済み");return;}a.push(toolRow(t));persist();blip(720,0.1,"triangle");renderStage();renderNav();toast(`${t.name}（${capLevel==='beginner'?'初心者':'実務'}）を投入`);}
+function injectAll(){const a=state.data.ph2.tools;clearSingleEmpty(a);let n=0;CAP_TOOLS[capLevel].forEach(t=>{if(!a.some(r=>(r.tool||"").trim()===t.name)){a.push(toolRow(t));n++;}});persist();chord([523,659]);renderStage();renderNav();toast(`4ツール投入：新規${n}件`);}
+function injectRubric(){const a=state.data.ph2.rubric;clearSingleEmpty(a);RUBRIC_PRESET.forEach(r=>{if(!a.some(x=>(x.level||"").trim()===r.level))a.push({level:r.level,def:r.def,behavior:r.behavior});});persist();blip(700,0.1,"triangle");renderStage();renderNav();toast("標準ルーブリック(L1–L4)を投入");}
+
+function capKey(lv,tid,layer,i){return lv+"_"+tid+"_"+layer+"_"+i;}
+function capChk(lv,tid,layer,i,label){const k=capKey(lv,tid,layer,i),on=!!state.capChecks[k],id="cc_"+k;return `<label class="chk ${on?'checked':''}" for="${id}"><input type="checkbox" id="${id}" data-ck="${k}" ${on?'checked':''}><span>${label}</span></label>`;}
+function capToolProg(lv,t){let d=0;t.doo.forEach((_,i)=>{if(state.capChecks[capKey(lv,t.id,"do",i)])d++;});return d+"/"+t.doo.length;}
+function renderCapMap(host){const lvtabs=document.createElement("div");lvtabs.className="subtabs";lvtabs.style.marginTop="2px";lvtabs.innerHTML=`<button class="subtab ${capLevel==='beginner'?'on':''}" data-lv="beginner">🌱 初心者向け</button><button class="subtab ${capLevel==='practical'?'on':''}" data-lv="practical">🛠 実務向け</button><button class="addbtn" id="injHere" style="margin:0 0 0 auto;align-self:center">⊕ この内容を「設計する」に投入</button>`;host.appendChild(lvtabs);setTimeout(()=>{lvtabs.querySelectorAll(".subtab").forEach(b=>b.onclick=()=>{capLevel=b.dataset.lv;blip(600,0.07);renderStage();});$("#injHere").onclick=()=>{ph2view="design";injectAll();injectRubric();};},0);
+  const intro=INTRO[capLevel];const ip=document.createElement("div");ip.className="toolcard";ip.style.marginTop="10px";ip.style.padding="14px 16px";ip.innerHTML=`<p class="lead">${intro.lead}</p><div class="kgrid">${intro.cards.map(c=>`<div class="kcard"><div class="t">${c.t}</div><p>${c.h}</p></div>`).join("")}</div><div class="order">${intro.order.map((o,i)=>`<div class="ostep">${o}</div>${i<intro.order.length-1?'<span class="oarrow">▸</span>':''}`).join("")}</div>`;host.appendChild(ip);
+  CAP_TOOLS[capLevel].forEach(t=>{const c=document.createElement("div");c.className="toolcard";c.innerHTML=`<div class="phead"><div class="blk blk-${t.color}"><b>${t.code}</b></div><div class="ht"><div class="ec">AI TOOL ／ ${capLevel==='beginner'?'初心者':'実務'}</div><h2 style="font-size:16px">🍜 ${t.name} <span style="font-size:12px;color:var(--muted);font-weight:400">— ${t.role}</span></h2></div><div class="lamps"><i class="l-${t.color}"></i><i class="l-teal"></i></div></div><div class="tier def"><div class="lbl">定義</div><div class="val">${t.def}</div></div><div class="tier ramen"><div class="lbl">たとえ🍜</div><div class="val">${t.ramen}<span class="nb">※不正確</span></div></div><div class="tier"><div class="lbl">詳細</div><div class="val">${t.detail}</div></div><div class="tier oneword"><div class="lbl">一言</div><div class="val">${t.oneword}</div></div><div class="why-note">💡 <b>なぜ学ぶ？</b> ${t.whyLearn}</div><div class="layer"><h4><span class="pill know">知識</span> ${capLevel==='beginner'?'知っている':'仕組みを説明できる'}</h4>${t.know.map((x,i)=>capChk(capLevel,t.id,"know",i,x)).join("")}</div><div class="layer"><h4><span class="pill do">実践</span> ${capLevel==='beginner'?'できる':'設計・改善できる'}</h4>${t.doo.map((x,i)=>capChk(capLevel,t.id,"do",i,x)).join("")}<div class="toolprog">実践チェック：<span id="ctp_${t.id}">${capToolProg(capLevel,t)}</span></div></div><div class="layer"><h4><span class="pill why">設計思想</span> なぜそう使うか</h4>${t.why.map((x,i)=>capChk(capLevel,t.id,"why",i,x)).join("")}</div><div class="pitfall">⚠️ <b>つまずき</b>：${t.pitfall}</div>`;host.appendChild(c);});
+  const rb=document.createElement("div");rb.className="toolcard";rb.style.padding="14px 16px";rb.innerHTML=`<h2 style="font-size:15px;margin:0 0 6px">評価ルーブリック（共通）</h2><table class="rub"><thead><tr><th>レベル</th><th>定義</th><th>観察される行動の例</th></tr></thead><tbody>${RUBRIC_ROWS.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table><div class="goal">${RUBRIC_GOAL[capLevel]}</div>`;host.appendChild(rb);
+  setTimeout(()=>{host.querySelectorAll('input[type=checkbox][data-ck]').forEach(cb=>cb.onchange=()=>{const k=cb.dataset.ck;state.capChecks[k]=cb.checked;persist();cb.closest(".chk").classList.toggle("checked",cb.checked);blip(cb.checked?740:420,0.06);const tid=k.split("_")[1];const t=CAP_TOOLS[capLevel].find(x=>x.id===tid);if(t){const el=$("#ctp_"+tid);if(el)el.textContent=capToolProg(capLevel,t);}});},0);}
+
+/* ============== FIELDS ============== */
+function renderField(p,f){const w=document.createElement("div");w.className="field";const tag=f.type==="table"?"TABLE":f.type==="list"?"LIST":"TEXT";w.innerHTML=`<label class="flabel">${stripTags(f.label)}<span class="tag">${tag}</span></label>`+(f.hint?`<div class="hint">${f.hint}</div>`:"");if(f.type==="text"||f.type==="textarea"){const el=document.createElement(f.type==="text"?"input":"textarea");if(f.type==="text")el.type="text";el.placeholder=f.ph||"";el.value=state.data[p.id][f.key]||"";el.oninput=e=>{state.data[p.id][f.key]=e.target.value;persist();syncDock(p);renderNav();};w.appendChild(el);}else if(f.type==="list")w.appendChild(renderList(p,f));else if(f.type==="table")w.appendChild(renderTable(p,f));return w;}
+function renderList(p,f){const box=document.createElement("div"),rows=document.createElement("div");rows.className="listrows";const arr=state.data[p.id][f.key];arr.forEach((v,i)=>{const row=document.createElement("div");row.className="listrow";const idx=document.createElement("div");idx.className="idx";idx.textContent=(i+1).toString().padStart(2,"0");const inp=document.createElement("input");inp.type="text";inp.placeholder=f.ph||"";inp.value=v;inp.oninput=e=>{arr[i]=e.target.value;persist();syncDock(p);renderNav();};const x=document.createElement("button");x.className="xbtn";x.textContent="×";x.onclick=()=>{arr.splice(i,1);if(!arr.length)arr.push("");renderStage();renderNav();};row.appendChild(idx);row.appendChild(inp);row.appendChild(x);rows.appendChild(row);});box.appendChild(rows);const add=document.createElement("button");add.className="addbtn";add.textContent="＋ 行を追加";add.onclick=()=>{arr.push("");blip(560,0.06);renderStage();renderNav();};box.appendChild(add);return box;}
+function renderTable(p,f){const box=document.createElement("div"),tw=document.createElement("div");tw.className="tablewrap";const tbl=document.createElement("table");tbl.className="grid";const th=document.createElement("thead");let h="<tr>";f.columns.forEach(c=>h+=`<th>${c.label}</th>`);h+=`<th class="act"></th></tr>`;th.innerHTML=h;tbl.appendChild(th);const tb=document.createElement("tbody");const arr=state.data[p.id][f.key];arr.forEach((rd,i)=>{const tr=document.createElement("tr");f.columns.forEach(c=>{const td=document.createElement("td");const el=document.createElement(c.type==="textarea"?"textarea":"input");if(c.type!=="textarea")el.type="text";el.placeholder=c.ph||"";el.value=rd[c.key]||"";if(c.type==="textarea")el.rows=2;el.oninput=e=>{rd[c.key]=e.target.value;persist();syncDock(p);renderNav();};td.appendChild(el);tr.appendChild(td);});const tdx=document.createElement("td");const x=document.createElement("button");x.className="xbtn";x.textContent="×";x.onclick=()=>{arr.splice(i,1);if(!arr.length)arr.push(mkRow(f));renderStage();renderNav();};tdx.appendChild(x);tr.appendChild(tdx);tb.appendChild(tr);});tbl.appendChild(tb);tw.appendChild(tbl);box.appendChild(tw);const add=document.createElement("button");add.className="addbtn";add.textContent="＋ 行を追加";add.onclick=()=>{arr.push(mkRow(f));blip(560,0.06);renderStage();renderNav();};box.appendChild(add);return box;}
+
+/* ============== DOCK ============== */
+let dockTab="doc";
+function renderDock(p){const sec=document.createElement("section");sec.className="panel stagein";sec.innerHTML=`<div class="phead"><div class="blk blk-rose"><b>OUT</b></div><div class="ht"><div class="ec">OUTPUT</div><h2 style="font-size:15px">⚙ 生成ドック</h2></div><div class="lamps"><i class="l-rose"></i><i class="l-amber"></i><i class="l-teal"></i></div></div><div class="pbody"><div class="tabs"><button class="tab ${dockTab==="doc"?"active":""}" data-t="doc">📄 実務ドキュメント</button><button class="tab ${dockTab==="prompt"?"active":""}" data-t="prompt">🤖 Claude投入プロンプト</button></div><pre class="out" id="dockOut"></pre><div class="dock-actions"><button class="hud rose" id="dockCopy">⧉ コピー</button><button class="hud ghost" id="dockDl">⤓ .md</button><button class="hud teal" id="dockExport">📤 出力（MD/TXT/PDF/CSV）</button></div></div>`;setTimeout(()=>{sec.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{dockTab=t.dataset.t;blip(620,0.07);renderStage();});$("#dockOut").textContent=dockTab==="doc"?genPhaseDoc(p):genPhasePrompt(p);$("#dockCopy").onclick=()=>copyText($("#dockOut").textContent);$("#dockDl").onclick=()=>{const tag=dockTab==="doc"?"":"_prompt";download(`${p.code}_${stripTags(p.title)}${tag}.md`,$("#dockOut").textContent,"text/markdown;charset=utf-8");};$("#dockExport").onclick=()=>openExport("phase");},0);return sec;}
+function syncDock(p){const o=$("#dockOut");if(o)o.textContent=dockTab==="doc"?genPhaseDoc(p):genPhasePrompt(p);}
+
+/* ============== GENERATORS (MD) ============== */
+function pm(){return state.project;}
+function projectHeaderMd(){const m=pm(),l=(a,v)=>v&&v.trim()?`- **${a}**：${v.trim()}\n`:"";return (l("案件名",m.name)+l("クライアント/組織",m.client)+l("想定期間",m.period)+l("メイン講師",m.main)+l("サブ講師",m.sub)+l("対象者",m.audience))||"- （案件メタ未入力）\n";}
+function listMd(a){const it=a.filter(x=>x.trim());return it.length?it.map(x=>`- ${x.trim()}`).join("\n")+"\n":"- （未入力）\n";}
+function tableMd(f,a){const rows=a.filter(r=>Object.values(r).some(x=>(x||"").trim()));if(!rows.length)return "（未入力）\n";const h=f.columns.map(c=>c.label);let s="| "+h.join(" | ")+" |\n| "+h.map(()=>"---").join(" | ")+" |\n";rows.forEach(r=>{s+="| "+f.columns.map(c=>(r[c.key]||"").replace(/\n/g,"<br>").replace(/\|/g,"\\|")||"-").join(" | ")+" |\n";});return s;}
+function fieldMd(p,f){const v=state.data[p.id][f.key];let s=`### ${stripTags(f.label)}\n`;if(f.hint)s+=`> ${f.hint}\n\n`;if(f.type==="list")s+=listMd(v);else if(f.type==="table")s+=tableMd(f,v);else s+=(v&&v.trim()?v.trim()+"\n":"（未入力）\n");return s+"\n";}
+function genPhaseDoc(p){let s=`# ${p.code}｜${stripTags(p.title)}\n\n> **ミッション**：${stripTags(p.mission)}\n\n## 📌 案件メタ\n${projectHeaderMd()}\n## 🎯 結論ファースト\n${phaseConclusion(p)}\n\n## 📂 詳細\n`;p.fields.forEach(f=>s+=fieldMd(p,f));s+=`---\n*Generated by うさうさ宇宙船ブリッジ・スイート ${APP_VERSION} 🐰 ／ 事実と所感は分けて記載してください。*\n`;return s;}
+function phaseConclusion(p){const d=state.data[p.id];const m={ph1:()=>{const k=(d.kpis||[]).filter(r=>r.item&&r.item.trim()).map(r=>r.item.trim());return k.length?`本研修のゴールは「${k.slice(0,3).join("」「")}」。これらKPIから逆算して全フェーズを設計する。`:`（KPIを入力すると逆算ゴールが要約されます）`;},ph2:()=>{const t=(d.tools||[]).filter(r=>r.tool&&r.tool.trim()).map(r=>r.tool.trim());return t.length?`対象ツール（${t.join(" / ")}）を3層で分解し、ルーブリックで到達度を測る。`:`（ツールを投入/入力すると要約されます）`;},ph3:()=>d.philosophy&&d.philosophy.trim()?`設計思想「${d.philosophy.trim()}」を軸に、AI採点ループ込みの演習で“なぜ”まで体得させる。`:`（教材の設計思想を入力すると要約されます）`,ph4:()=>d.scope&&d.scope.trim()?`${d.scope.trim()} ／ 評価は「実務で使えた」を基準に実測FBを収集。`:`（パイロット規模を入力すると要約されます）`,ph5:()=>{const it=(d.pkg||[]).filter(r=>r.item&&r.item.trim()).map(r=>r.item.trim());return it.length?`「${it.join("」「")}」を再現パッケージ化し横展開する。`:`（パッケージ要素を入力すると要約されます）`;},ph6:()=>d.share&&d.share.trim()?`四半期アップデート＋ナレッジ共有会で陳腐化を防ぐ。${d.share.trim()}`:`（共有会運用を入力すると要約されます）`,};return(m[p.id]||(()=>""))();}
+function genPhasePrompt(p){const c=`あなたは一流のIT研修設計コンサルタントです。AI研修導入プロジェクトの「${p.code} ${stripTags(p.title)}」フェーズを現役講師として実務レビューしてください。`;return[c,"","# プロジェクト前提\n"+projectHeaderMd(),"","# このフェーズの現状入力\n"+p.fields.map(f=>fieldMd(p,f)).join(""),"# 依頼",ask(p),"","# 出力条件","- 結論ファースト。事実と所感（推論）は明示的に分ける。","- 一般論でなく入力内容に即した具体的な指摘に。","- 数値の捏造禁止。根拠が弱い箇所は「要検証」と明記。"].join("\n");}
+function ask(p){const m={ph1:`1) KPIが測定可能か検証し曖昧なものは具体化案。\n2) 実務課題とKPIの紐付けの飛躍を指摘。\n3) 不足ゴールを追加提案。`,ph2:`1) 各ツールの3層に抜け漏れ/混同がないか指摘。\n2) ルーブリックが「行動」で測れているか検証し改善案。\n3) 追加すべき評価軸を提案。`,ph3:`1) 教材が設計思想(WHY)と整合しているか。\n2) AI採点ループが機能する設計か具体的にレビュー。\n3) 難易度・想定時間の妥当性を指摘。`,ph4:`1) 評価基準が「実務で使えた」を測れているか。\n2) パイロット規模/対象の妥当性とバイアスを指摘。\n3) FB項目の過不足を提案。`,ph5:`1) 再現パッケージで属人化が解けているか。\n2) 進行台本の抜けを指摘。\n3) 横展開で壊れやすい箇所と対策。`,ph6:`1) 四半期運用にトリガー/担当の抜けがないか。\n2) 共有会がブレームレスに設計されているか。\n3) ウォッチ指標の過不足を提案。`,};return m[p.id]||"このフェーズの設計をレビューし改善案を提示してください。";}
+function genFullDoc(){let s=`# 🐰 AI研修 導入ロードマップ ／ うさうさ宇宙船ブリッジ・スイート\n\n## 📌 案件メタ\n${projectHeaderMd()}\n## 🗺️ 全体像（6フェーズ）\n| フェーズ | 内容 | 進捗 |\n| --- | --- | --- |\n`;PHASES.forEach(p=>{const pr=phaseFilled(p);s+=`| ${p.code} | ${stripTags(p.title)} | ${pr.pct}% |\n`;});s+="\n---\n\n";PHASES.forEach(p=>s+=genPhaseDoc(p)+"\n");return s;}
+function genCapMd(){let s=`# 🗺️ ケイパビリティマップ（初心者／実務）\n\n`;["beginner","practical"].forEach(lv=>{s+=`## ${lv==="beginner"?"🌱 初心者向け":"🛠 実務向け"}\n\n`;CAP_TOOLS[lv].forEach(t=>{s+=`### 🍜 ${t.name}（${t.role}）\n- **定義**：${t.def}\n- **たとえ🍜（※不正確）**：${t.ramen}\n- **一言**：${t.oneword}\n\n**知識**\n${t.know.map((x,i)=>`- [${state.capChecks[capKey(lv,t.id,"know",i)]?"x":" "}] ${x}`).join("\n")}\n\n**実践**\n${t.doo.map((x,i)=>`- [${state.capChecks[capKey(lv,t.id,"do",i)]?"x":" "}] ${x}`).join("\n")}\n\n**設計思想**\n${t.why.map((x,i)=>`- [${state.capChecks[capKey(lv,t.id,"why",i)]?"x":" "}] ${x}`).join("\n")}\n\n`;});s+=`### ルーブリック\n| レベル | 定義 | 観察される行動 |\n| --- | --- | --- |\n${RUBRIC_ROWS.map(r=>`| ${r[0]} | ${r[1]} | ${r[2]} |`).join("\n")}\n\n`;});s+=`---\n*🍜のたとえは入口用で※不正確。仕様は公式で最新確認を。*\n`;return s;}
+
+/* ============== FORMAT CONVERTERS ============== */
+function mdToPlain(md){return md.replace(/^### (.*)$/gm,"■ $1").replace(/^## (.*)$/gm,"◆ $1").replace(/^# (.*)$/gm,"【$1】").replace(/^> (.*)$/gm,"  » $1").replace(/\*\*(.+?)\*\*/g,"$1").replace(/<br>/g," / ").replace(/^\|[\s:|-]+\|$/gm,"").replace(/\|/g,"│").replace(/^---$/gm,"————————————————————————————");}
+function escH(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function inlineH(s){return escH(s).replace(/&lt;br&gt;/g,"<br>").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");}
+function mdToHtml(md){const lines=md.split("\n");let html="",i=0;
+  function flushList(buf){if(buf.length){html+="<ul>"+buf.map(x=>"<li>"+inlineH(x)+"</li>").join("")+"</ul>";}}
+  while(i<lines.length){let ln=lines[i];
+    if(/^### /.test(ln)){html+="<h3>"+inlineH(ln.slice(4))+"</h3>";i++;continue;}
+    if(/^## /.test(ln)){html+="<h2>"+inlineH(ln.slice(3))+"</h2>";i++;continue;}
+    if(/^# /.test(ln)){html+="<h1>"+inlineH(ln.slice(2))+"</h1>";i++;continue;}
+    if(/^---\s*$/.test(ln)){html+="<hr>";i++;continue;}
+    if(/^>\s?/.test(ln)){let b=[];while(i<lines.length&&/^>\s?/.test(lines[i])){b.push(lines[i].replace(/^>\s?/,""));i++;}html+="<blockquote>"+b.map(inlineH).join("<br>")+"</blockquote>";continue;}
+    if(/^\|/.test(ln)){let rows=[];while(i<lines.length&&/^\|/.test(lines[i])){rows.push(lines[i]);i++;}
+      const cells=r=>r.replace(/^\||\|$/g,"").split("|").map(x=>x.trim());
+      let head=cells(rows[0]);let bodyRows=rows.slice(1).filter(r=>!/^\|[\s:|-]+\|$/.test(r));
+      html+="<table><thead><tr>"+head.map(h=>"<th>"+inlineH(h)+"</th>").join("")+"</tr></thead><tbody>"+bodyRows.map(r=>"<tr>"+cells(r).map(c=>"<td>"+inlineH(c)+"</td>").join("")+"</tr>").join("")+"</tbody></table>";continue;}
+    if(/^- /.test(ln)){let b=[];while(i<lines.length&&/^- /.test(lines[i])){b.push(lines[i].slice(2));i++;}flushList(b);continue;}
+    if(/^\s*$/.test(ln)){i++;continue;}
+    html+="<p>"+inlineH(ln)+"</p>";i++;}
+  return html;}
+
+function csvCell(s){s=(s==null?"":String(s));if(/[",\n\r]/.test(s))s='"'+s.replace(/"/g,'""')+'"';return s;}
+function csvFrom(rows){return "\uFEFF"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");}
+function csvData(scope){const rows=[["フェーズ","セクション","行/番号","列","値"]];if(scope!=="phase")PROJECT_FIELDS.forEach(f=>rows.push(["（案件メタ）",f.label,"","",state.project[f.key]||""]));const ps=scope==="phase"?[activePhase()]:PHASES;ps.forEach(p=>{const ph=p.code+" "+stripTags(p.title);p.fields.forEach(f=>{const v=state.data[p.id][f.key];const lbl=stripTags(f.label);if(f.type==="text"||f.type==="textarea")rows.push([ph,lbl,"","",v||""]);else if(f.type==="list"){const it=v.filter(x=>x.trim());if(it.length)it.forEach((x,i)=>rows.push([ph,lbl,String(i+1),"",x]));else rows.push([ph,lbl,"","",""]);}else if(f.type==="table"){const dr=v.filter(r=>Object.values(r).some(x=>(x||"").trim()));if(dr.length)dr.forEach((rd,i)=>f.columns.forEach(c=>rows.push([ph,lbl,String(i+1),c.label,rd[c.key]||""])));else rows.push([ph,lbl,"","",""]);}});});return csvFrom(rows);}
+function csvCap(){const rows=[["レベル","ツール","層","項目","チェック"]];["beginner","practical"].forEach(lv=>{CAP_TOOLS[lv].forEach(t=>{[["know","知識",t.know],["do","実践",t.doo],["why","設計思想",t.why]].forEach(([layer,jp,arr])=>{arr.forEach((x,i)=>rows.push([lv==="beginner"?"初心者":"実務",t.name,jp,x,state.capChecks[capKey(lv,t.id,layer,i)]?"✓":""]));});});});return csvFrom(rows);}
+
+/* ============== EXPORT CENTER ============== */
+let exportScope="phase";
+function openExport(scope){exportScope=scope||"full";const html=`
+  <p class="lead">出力スコープと形式を選んでください。PDFは印刷ダイアログから「PDFとして保存」を選べます。</p>
+  <h3>出力スコープ</h3>
+  <div class="seg" id="scopeSeg">
+    <button data-s="phase" class="${exportScope==='phase'?'on':''}">このフェーズ</button>
+    <button data-s="full" class="${exportScope==='full'?'on':''}">全フェーズ統合</button>
+    <button data-s="cap" class="${exportScope==='cap'?'on':''}">ケイパビリティ自己チェック</button>
+  </div>
+  <h3>形式を選んでダウンロード</h3>
+  <div class="fmtgrid">
+    <div class="fmtbtn" data-f="md"><b>📄 Markdown (.md)</b><span>Notion・報告書に貼れる</span></div>
+    <div class="fmtbtn" data-f="txt"><b>📝 テキスト (.txt)</b><span>装飾なしのプレーン</span></div>
+    <div class="fmtbtn" data-f="pdf"><b>🧾 PDF（印刷）</b><span>印刷→PDF保存</span></div>
+    <div class="fmtbtn" data-f="csv"><b>📊 CSV (.csv)</b><span>Excel/スプレッドシート</span></div>
+  </div>
+  <div class="note">CSVはBOM付きUTF-8でExcelの文字化けを防いでいます。PDFは現在の見た目ではなく、読みやすい印刷用レイアウトで出力されます。</div>`;
+  openModal("📤 出力センター",html,()=>{
+    $("#scopeSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{exportScope=b.dataset.s;$("#scopeSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));});
+    document.querySelectorAll(".fmtbtn").forEach(b=>b.onclick=()=>doExport(exportScope,b.dataset.f));
+  },"EXPORT");
+}
+function scopeMd(scope){return scope==="full"?genFullDoc():scope==="cap"?genCapMd():genPhaseDoc(activePhase());}
+function scopeBase(scope){const nm=safeName(pm().name);return scope==="full"?`AI研修ロードマップ_統合_${nm}`:scope==="cap"?`ケイパビリティマップ_${nm}`:`${activePhase().code}_${stripTags(activePhase().title)}`;}
+function doExport(scope,fmt){try{
+  const base=scopeBase(scope);
+  if(fmt==="md"){download(base+".md",scopeMd(scope),"text/markdown;charset=utf-8");chord([523,659]);toast("Markdownを出力しました");closeModal();}
+  else if(fmt==="txt"){download(base+".txt",mdToPlain(scopeMd(scope)),"text/plain;charset=utf-8");toast("テキストを出力しました");closeModal();}
+  else if(fmt==="csv"){const csv=scope==="cap"?csvCap():csvData(scope);download(base+".csv",csv,"text/csv;charset=utf-8");toast("CSVを出力しました");closeModal();}
+  else if(fmt==="pdf"){closeModal();setTimeout(()=>exportPDF(scope),120);}
+}catch(e){logEvent("ERROR","doExport "+scope+"/"+fmt,e.message);toast("出力に失敗（ログ参照）",false,true);}}
+function exportPDF(scope){try{const html=mdToHtml(scopeMd(scope));$("#printroot").innerHTML=html;document.body.classList.add("printing");logEvent("INFO","PDF印刷 "+scope);window.print();}catch(e){logEvent("ERROR","exportPDF",e.message);toast("PDF出力に失敗（ログ参照）",false,true);document.body.classList.remove("printing");}}
+window.addEventListener("afterprint",()=>document.body.classList.remove("printing"));
+
+/* ============== MODAL SYSTEM ============== */
+function openModal(title,html,onMount,tag){$("#modalTitle").textContent=title;$("#modalTag").textContent=tag||"INFO";$("#modalBody").innerHTML=html;$("#overlay").classList.add("open");if(onMount)try{onMount();}catch(e){logEvent("ERROR","modal mount",e.message);}}
+function closeModal(){$("#overlay").classList.remove("open");}
+$("#modalClose").onclick=closeModal;$("#overlay").onclick=e=>{if(e.target.id==="overlay")closeModal();};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+/* ============== SNAPSHOT MODAL ============== */
+function renderSnapModal(){const list=$("#snapList");if(!list)return;if(!snaps.length){list.innerHTML='<div class="emptybox">一次保存はまだありません。「現在を一次保存」で作成できます。</div>';return;}list.innerHTML="";snaps.forEach(s=>{const r=document.createElement("div");r.className="rowitem";r.innerHTML=`<div class="meta"><b>${escH(s.name)}</b><small>ID ${s.id}</small></div>`;const rb=document.createElement("button");rb.className="rest";rb.textContent="復元";rb.onclick=()=>restoreSnap(s.id);const db=document.createElement("button");db.className="del";db.textContent="削除";db.onclick=()=>delSnap(s.id);r.appendChild(rb);r.appendChild(db);list.appendChild(r);});}
+function openSnap(){const note=HAS_LS?`この端末のブラウザに保存され、次回も復元できます。長期保存・共有は <b>JSON保存</b> を併用してください。`:`<b>アーティファクト版</b>のためセッション内のみ保持されます（リロードで消えます）。確実な保全は <b>JSON保存</b> またはローカル版をご利用ください。`;
+  const html=`<p class="lead">編集の節目で<b>一次保存（スナップショット）</b>を作っておくと、いつでもその状態に戻せます。最新10件まで保持。</p>
+  <div class="note">${note}</div>
+  <div class="seg"><button class="on" id="snapNew">＋ 現在を一次保存</button><button id="snapNamed">＋ 名前を付けて保存</button></div>
+  <h3>保存済み（新しい順）</h3><div class="rowlist" id="snapList"></div>`;
+  openModal("💾 一次保存（スナップショット）",html,()=>{$("#snapNew").onclick=()=>saveSnap();$("#snapNamed").onclick=()=>{const n=prompt("一次保存の名前");if(n!==null)saveSnap(n.trim()||undefined);};renderSnapModal();},"SAVE");
+}
+
+/* ============== LOG MODAL ============== */
+function openLog(){const html=`<p class="lead">アプリ内で起きたエラーや主要操作の記録です。うまく動かない時は、ここを<b>コピー</b>または<b>.txt保存</b>して共有してください。</p>
+  <div class="seg"><button class="on" id="logCopy">⧉ 全コピー</button><button id="logDl">⤓ .txt保存</button><button id="logClear">🗑 クリア</button><button id="logTest">⚑ テスト記録</button></div>
+  <div class="logbox" id="logBox"></div>`;
+  openModal("🩺 エラーログ",html,()=>{$("#logCopy").onclick=()=>copyText(logText());$("#logDl").onclick=()=>download(`usausa_log_${Date.now()}.txt`,logText(),"text/plain;charset=utf-8");$("#logClear").onclick=()=>{errlog.length=0;updateLogBadge();renderLogBox();};$("#logTest").onclick=()=>{logEvent("INFO","テスト記録（動作確認）");renderLogBox();};renderLogBox();},"LOG");
+}
+function logText(){return `=== うさうさスイート ${APP_VERSION} ログ (${new Date().toLocaleString("ja-JP")}) ===\nモード:${MODE_LABEL} / 保存:${HAS_LS?"localStorage":"メモリ"} / UA:${navigator.userAgent}\n\n`+(errlog.length?errlog.map(e=>`[${e.t}] ${e.type}: ${e.msg}${e.extra?" ("+e.extra+")":""}`).join("\n"):"(記録なし)");}
+function renderLogBox(){const box=$("#logBox");if(!box)return;if(!errlog.length){box.innerHTML='<div class="emptybox">記録はありません。</div>';return;}box.innerHTML=errlog.map(e=>`<div class="logline ${e.type}"><span class="lt">[${e.t}]</span> <span class="tp">${e.type}</span> ${escH(e.msg)}${e.extra?' <span class="lt">('+escH(e.extra)+')</span>':''}</div>`).join("");}
+
+/* ============== HELP（増量） ============== */
+function buildHelp(){const storeNote=HAS_LS?`入力は<b>自動保存</b>され、同じブラウザなら次回開いたとき復元されます。`:`<b>アーティファクト版</b>は自動保存されません（リロードで消えます）。<b>JSON保存</b>か<b>一次保存</b>で保全し、長期運用は<b>ローカル版</b>を使ってください。`;
+  const html=`
+  <p class="lead">AI研修の導入を <b>6フェーズ</b>で入力すると、各フェーズの<b>実務ドキュメント</b>と<b>Claude投入プロンプト</b>を自動生成します。すべてオフライン動作・外部送信なし。<b>${APP_VERSION}</b>。</p>
+
+  <h3>0. 保存モード（自動判定）</h3>
+  <p>この1ファイルは環境を自動判定して動きます。いま動作中のモードは画面上部ステータスと🩺ログ先頭に表示されます（現在：<b>${MODE_LABEL}</b>）。</p>
+  <ul>
+    <li><b>通常モード</b>（ブラウザで開く／ダウンロード運用）：localStorageが使え<b>自動保存あり</b>。一次保存も端末に残り、次回復元できます。研修運用の本番向け。</li>
+    <li><b>セッションモード</b>（claude.ai等の保存制限環境）：自動保存なし（リロードで消える）。<b>JSON保存</b>や<b>一次保存（セッション内）</b>で保全してください。</li>
+  </ul>
+  <div class="note">確実な保全は<b>JSON保存</b>を併用してください。別端末への移行もJSONで行えます。</div>
+
+  <h3>1. 基本の流れ</h3>
+  <div class="step"><div class="n">1</div><div><b>案件レジストリを埋める</b>（共通メタ・役職名で）。</div></div>
+  <div class="step"><div class="n">2</div><div><b>左の MISSION DECK でフェーズ選択</b>。進捗%が出て、100%で🎉演出。</div></div>
+  <div class="step"><div class="n">3</div><div><b>入力欄を埋める</b>（テキスト／リスト＋行追加／表）。</div></div>
+  <div class="step"><div class="n">4</div><div><b>生成ドック</b>でドキュメント／プロンプトを確認・コピー・出力。</div></div>
+  <div class="step"><div class="n">5</div><div><b>📤 出力</b>で全体を4形式（MD/TXT/PDF/CSV）に書き出し。</div></div>
+
+  <h3>2. PH-02 ケイパビリティマップ</h3>
+  <p>PH-02には2タブ。</p>
+  <ul>
+    <li><span class="kbd">✍️ 設計する</span>：プリセット（初心者向け/実務向け）から3層スキルとルーブリックを<b>投入</b>し、案件向けに編集。</li>
+    <li><span class="kbd">📖 学ぶ（マップ）</span>：🌱初心者／🛠実務タブで、定義→たとえ🍜→詳細→一言と3層を読み、<b>実践チェック</b>で自己評価。<b>⊕この内容を「設計する」に投入</b>で反映。</li>
+  </ul>
+  <div class="note">投入は<b>追記</b>方式（既存行は消えません・同名重複なし）。🍜のたとえは入口用で<b>※不正確</b>。仕様は更新されるため公式で最新確認を。</div>
+
+  <h3>3. 出力（MD / TXT / PDF / CSV）</h3>
+  <p>右上 <b>📤 出力</b>（または生成ドックの📤）で<b>出力センター</b>が開きます。</p>
+  <ol>
+    <li><b>スコープ</b>を選ぶ：このフェーズ／全フェーズ統合／ケイパビリティ自己チェック。</li>
+    <li><b>形式</b>を選ぶ：
+      <ul>
+        <li><b>📄 Markdown(.md)</b>：見出し・表つき。Notion等にそのまま。</li>
+        <li><b>📝 テキスト(.txt)</b>：装飾を外したプレーン。メールやメモ向け。</li>
+        <li><b>🧾 PDF</b>：印刷用レイアウトに変換し印刷ダイアログを表示。「PDFとして保存」を選択。</li>
+        <li><b>📊 CSV(.csv)</b>：BOM付きUTF-8でExcelの文字化け回避。表データを行展開。</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h3>4. 一次保存（スナップショット）</h3>
+  <p>右上 <b>💾 一次保存</b>。編集の節目で現在の状態を保存し、いつでも<b>復元</b>できます（最新10件）。名前付き保存も可。${storeNote}</p>
+
+  <h3>5. エラーログ</h3>
+  <p>右上 <b>🩺 ログ</b>。アプリ内のエラーや主要操作を記録します。エラー時はボタンに件数バッジが付きます。うまく動かない時は<b>全コピー</b>か<b>.txt保存</b>で共有してください。</p>
+
+  <h3>6. 保存・読込・SFX</h3>
+  <ul>
+    <li><b>⤓ JSON保存／⤒ 読込</b>：プロジェクト全体を1ファイルで持ち運び・バックアップ・別端末復元。</li>
+    <li><b>🔊 SFX</b>：クリック音・効果音をON（任意・既定OFF）。</li>
+    <li><b>🛈 使い方</b>はEscでも閉じます。</li>
+  </ul>
+
+  <h3>7. つまずいたら（FAQ）</h3>
+  <ul>
+    <li><b>入力が消えた</b>：アーティファクト版はリロードで消えます。JSON保存か一次保存を。ローカル版は同じブラウザで自動復元。</li>
+    <li><b>PDFが真っ白／全部出る</b>：印刷プレビューで「背景のグラフィック」をOFF、レイアウトはそのままで保存を。うまくいかない時はMDで出してから各自でPDF化を。</li>
+    <li><b>CSVが文字化け</b>：Excelで開く前提のBOM付きです。スプレッドシートでUTF-8指定でも開けます。</li>
+    <li><b>ボタンが反応しない</b>：🩺ログを確認し、内容を共有してください。</li>
+  </ul>`;
+  HELP_HTML=html;}
+let HELP_HTML="";
+
+/* ============== TOP ACTIONS ============== */
+$("#btnHelp").onclick=()=>{openModal("🛰️ 操作マニュアル",HELP_HTML,null,"HELP");blip(640,0.08);};
+$("#btnExport").onclick=()=>openExport(activePhase()?"phase":"full");
+$("#btnSnap").onclick=openSnap;$("#miniSnap").onclick=openSnap;
+$("#miniExport").onclick=()=>openExport("phase");
+$("#btnLog").onclick=openLog;
+$("#btnSave").onclick=()=>{state.activeId=activeId;download(`usausa_bridge_${safeName(pm().name)}.json`,JSON.stringify(state,null,2),"application/json");blip(660,0.1);toast("JSON保存しました");};
+$("#btnLoad").onclick=()=>$("#fileLoad").click();
+$("#fileLoad").onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);state=migrate(o);activeId=state.activeId||"ph1";celebratedPhase={};celebratedAll=true;persist();renderNav();renderStage();logEvent("INFO","JSON読込: "+file.name);toast("JSONを読み込みました");}catch(err){logEvent("ERROR","JSON読込",err.message);toast("読み込み失敗：JSON形式を確認（ログ参照）",false,true);}e.target.value="";};r.onerror=()=>{logEvent("ERROR","FileReader",file.name);toast("ファイル読込に失敗",false,true);};r.readAsText(file);};
+$("#btnSfx").onclick=()=>{sfxOn=!sfxOn;ensureAudio();if(actx&&actx.state==="suspended")actx.resume();$("#btnSfx").innerHTML=sfxOn?"🔊 SFX":"🔇 SFX";if(sfxOn)chord([523,784]);toast(sfxOn?"SFX ON":"SFX OFF");};
+
+/* ============== TICKER / CLOCK ============== */
+const TICK=["航行中…","コンテキスト充填 100%","量子ドック 安定","ナビゲーター うさうさ 思考中…","推進系 ノミナル","スターチャート 同期完了"];let ti=0;setInterval(()=>{ti=(ti+1)%TICK.length;const el=$("#ticker");if(el)el.textContent=TICK[ti];},4200);
+function tick(){const d=new Date(),z=n=>n.toString().padStart(2,"0");const el=$("#clock");if(el)el.textContent=`${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;}setInterval(tick,1000);tick();
+
+/* ============== PARALLAX ============== */
+let rafQ=false;if(matchMedia("(pointer:fine)").matches){window.addEventListener("mousemove",e=>{const px=(e.clientX/innerWidth-.5),py=(e.clientY/innerHeight-.5);if(!rafQ){rafQ=true;requestAnimationFrame(()=>{const sf=$("#starfield");if(sf){sf.querySelector(".s1").style.transform=`translate(${px*-8}px,${py*-8}px)`;sf.querySelector(".s2").style.transform=`translate(${px*-16}px,${py*-16}px)`;sf.querySelector(".s3").style.transform=`translate(${px*-26}px,${py*-26}px)`;}rafQ=false;});}});}
+
+/* ============== BOOT ============== */
+function runBoot(){const log=$("#bootLog"),bar=$("#bootBar"),boot=$("#boot");const lines=["SYSTEM BOOT...","推進系オンライン","スターチャート読込","ナビゲーター うさうさ🐰 起動","ALL SYSTEMS NOMINAL ✦"];let pct=0,li=0;const iv=setInterval(()=>{pct+=Math.random()*16+7;if(pct>100)pct=100;bar.style.width=pct+"%";const idx=Math.min(lines.length-1,Math.floor(pct/100*lines.length));if(idx!==li){li=idx;log.textContent=lines[idx];}if(pct>=100){clearInterval(iv);setTimeout(()=>boot.classList.add("gone"),420);}},170);}
+$("#bootSkip").onclick=()=>$("#boot").classList.add("gone");
+if(matchMedia("(prefers-reduced-motion:reduce)").matches)$("#boot").classList.add("gone");else runBoot();
+
+/* ============== START ============== */
+$("#verchip").textContent="PRO";
+$("#storemode").textContent=MODE_LABEL+"／保存:"+(HAS_LS?"自動(localStorage)":"セッション内(JSON/一次保存で保全)");
+celebratedAll=true;updateLogBadge();buildHelp();renderNav();renderStage();
+setTimeout(()=>{celebratedAll=globalProgress()>=100;},100);
+logEvent("INFO","起動 "+APP_VERSION+" / "+MODE_LABEL);
+</script>
+</body>
+</html>
